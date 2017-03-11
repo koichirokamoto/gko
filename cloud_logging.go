@@ -10,7 +10,10 @@ import (
 	"google.golang.org/appengine"
 )
 
-var _ CloudLogging = (*CloudLoggingClient)(nil)
+var (
+	_ CloudLoggingFactory = (*CloudLoggingFactoryImpl)(nil)
+	_ CloudLogging        = (*CloudLoggingClient)(nil)
+)
 
 // CloudLoggingFactory is cloud logging factory interface.
 type CloudLoggingFactory interface {

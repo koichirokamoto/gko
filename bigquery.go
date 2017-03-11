@@ -10,11 +10,14 @@ import (
 	"google.golang.org/appengine"
 )
 
-var _ BigQuery = (*BigQueryClient)(nil)
+var (
+	_ BigQueryFactory = (*BigQueryFactoryImpl)(nil)
+	_ BigQuery        = (*BigQueryClient)(nil)
+)
 
 // BigQueryFactory is bigquery factory interface.
 type BigQueryFactory interface {
-	New(context.Context, string) (BigQuery, error)
+	New(context.Context) (BigQuery, error)
 }
 
 // BigQueryFactoryImpl is implementation of bigquery factory.

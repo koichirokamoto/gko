@@ -103,6 +103,7 @@ func (f *fcmWorker) handleErr() <-chan struct{} {
 		for f.count < f.limit {
 			if err := f.work(); err != nil {
 				WaitExponentialTime(f.count)
+				f.count++
 				continue
 			}
 		}

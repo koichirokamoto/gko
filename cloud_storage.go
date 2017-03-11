@@ -14,7 +14,10 @@ import (
 	"google.golang.org/appengine"
 )
 
-var _ CloudStorage = (*CloudStorageClient)(nil)
+var (
+	_ CloudStorageFactory = (*CloudStorageFactoryImpl)(nil)
+	_ CloudStorage        = (*CloudStorageClient)(nil)
+)
 
 // Bucket is cloud storage Bucket.
 type Bucket string
@@ -63,8 +66,6 @@ type CloudStorageClient struct {
 }
 
 // newCloudStorageClient return new cloud storage client.
-//
-// context and bucket, filename passed to arguments.
 func newCloudStorageClient(ctx context.Context) (*CloudStorageClient, error) {
 	client, err := storage.NewClient(ctx, option.WithTokenSource(google.AppEngineTokenSource(ctx)))
 	if err != nil {
@@ -124,8 +125,9 @@ func (c *CloudStorageClient) DeleteFile(b Bucket, filename string) error {
 
 // Copy copy file in cloud storage from src to dst.
 func (c *CloudStorageClient) Copy(b Bucket, src, dst string) error {
-	soh := c.client.Bucket(b.Name(c.ctx)).Object(src)
-	doh := c.client.Bucket(b.Name(c.ctx)).Object(dst)
+	bh := c.client.Bucket(b.Name(c.ctx))
+	soh := bh.Object(src)
+	doh := bh.Object(dst)
 	if _, err := doh.CopierFrom(soh).Run(c.ctx); err != nil {
 		ErrorLog(c.ctx, err.Error())
 		return err

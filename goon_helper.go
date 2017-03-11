@@ -171,7 +171,7 @@ func makeErrMap(i int) map[int]bool {
 func (g *GoonRetryHelper) put() error {
 	for i, v := range g.v {
 		if g.m[i] {
-			_, err := g.Put(v)
+			_, err := g.PutMulti(v)
 			if err != nil {
 				g.m[i] = true
 				return err
@@ -185,7 +185,7 @@ func (g *GoonRetryHelper) put() error {
 func (g *GoonRetryHelper) get() error {
 	for i, v := range g.v {
 		if g.m[i] {
-			err := g.Get(v)
+			err := g.GetMulti(v)
 			if err != nil {
 				g.m[i] = true
 				return err

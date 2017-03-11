@@ -11,7 +11,10 @@ import (
 	pubsub "google.golang.org/api/pubsub/v1"
 )
 
-var _ CloudPubSub = (*CloudPubSubClient)(nil)
+var (
+	_ CloudPubSubFactory = (*CloudPubSubFactoryImpl)(nil)
+	_ CloudPubSub        = (*CloudPubSubClient)(nil)
+)
 
 // Topic is cloud pubsub topic.
 type Topic string
