@@ -1,0 +1,179 @@
+hash: 5ac5cd46ea8023f1bad7e8f4a50815cbb06606b768003aa93cf22df85c93a0c8
+updated: 2017-03-11T20:10:31.360451156+09:00
+imports:
+- name: cloud.google.com/go
+  version: 620e968dec62c9aac95a23e38e32e2cb831f73e3
+  subpackages:
+  - bigquery
+  - civil
+  - compute/metadata
+  - internal
+  - internal/atomiccache
+  - internal/fields
+  - internal/optional
+  - internal/version
+  - logging
+  - logging/apiv2
+  - logging/internal
+  - storage
+- name: github.com/davecgh/go-spew
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  subpackages:
+  - spew
+- name: github.com/gin-gonic/gin
+  version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
+  subpackages:
+  - binding
+  - render
+- name: github.com/golang/protobuf
+  version: c9c7427a2a70d2eb3bafa0ab2dc163e45f143317
+  subpackages:
+  - proto
+  - protoc-gen-go/descriptor
+  - ptypes
+  - ptypes/any
+  - ptypes/duration
+  - ptypes/empty
+  - ptypes/struct
+  - ptypes/timestamp
+- name: github.com/googleapis/gax-go
+  version: 8c5154c0fe5bf18cf649634d4c6df50897a32751
+- name: github.com/koichirokamoto/apns
+  version: 4ee324a4babe553629ad60b1d3fe811ddf921a38
+- name: github.com/koichirokamoto/webpush
+  version: 1f39463356a425c3ac1951fdf5df80d6a256eaf9
+- name: github.com/manucorporat/sse
+  version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
+- name: github.com/mattn/go-isatty
+  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
+- name: github.com/mjibson/goon
+  version: ce6c18b635bb36342c10a151f79983efd70f96d6
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
+- name: github.com/RobotsAndPencils/buford
+  version: d6d71aff1447ced56016d09a5d74f4ea488a2d75
+  subpackages:
+  - certificate
+- name: github.com/satori/go.uuid
+  version: b061729afc07e77a8aa4fad0a2fd840958f1942a
+- name: github.com/sendgrid/rest
+  version: 3ec51b4f1754e13e92409355851a0a82e9a06461
+- name: github.com/sendgrid/sendgrid-go
+  version: d087004b4d47c2a378ade9eb3957571114b91493
+  subpackages:
+  - helpers/mail
+- name: github.com/stretchr/objx
+  version: cbeaeb16a013161a98496fad62933b1d21786672
+- name: github.com/stretchr/testify
+  version: 4d4bfba8f1d1027c4fdbe371823030df51419987
+  subpackages:
+  - assert
+  - mock
+- name: golang.org/x/crypto
+  version: 728b753d0135da6801d45a38e6f43ff55779c5c2
+  subpackages:
+  - pkcs12
+  - pkcs12/internal/rc2
+- name: golang.org/x/net
+  version: a6577fac2d73be281a500b310739095313165611
+  subpackages:
+  - context
+  - context/ctxhttp
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - lex/httplex
+  - trace
+- name: golang.org/x/oauth2
+  version: efb10a30610e617dbb17fc243f4cc61a8cfa2903
+  subpackages:
+  - google
+  - internal
+  - jws
+  - jwt
+- name: golang.org/x/sys
+  version: 99f16d856c9836c42d24e7ab64ea72916925fa97
+  subpackages:
+  - unix
+- name: golang.org/x/text
+  version: f28f36722d5ef2f9655ad3de1f248e3e52ad5ebd
+  subpackages:
+  - encoding
+  - encoding/internal
+  - encoding/internal/identifier
+  - encoding/japanese
+  - transform
+- name: google.golang.org/api
+  version: 1202890e803f07684581b575fda809bf335a533f
+  subpackages:
+  - admin/directory/v1
+  - bigquery/v2
+  - calendar/v3
+  - gensupport
+  - googleapi
+  - googleapi/internal/uritemplates
+  - googleapi/transport
+  - internal
+  - iterator
+  - oauth2/v2
+  - option
+  - pubsub/v1
+  - storage/v1
+  - support
+  - support/bundler
+  - transport
+- name: google.golang.org/appengine
+  version: b79c28f0197795b4050bfcd7c4c2209136c594b1
+  subpackages:
+  - blobstore
+  - datastore
+  - internal
+  - internal/app_identity
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/memcache
+  - internal/modules
+  - internal/remote_api
+  - internal/socket
+  - internal/taskqueue
+  - internal/urlfetch
+  - log
+  - memcache
+  - socket
+  - taskqueue
+  - urlfetch
+- name: google.golang.org/genproto
+  version: 1e95789587db7d93ebbaa5eb65da17d3dbf8ab64
+  subpackages:
+  - googleapis/api/annotations
+  - googleapis/api/label
+  - googleapis/api/monitoredres
+  - googleapis/logging/type
+  - googleapis/logging/v2
+  - googleapis/rpc/status
+- name: google.golang.org/grpc
+  version: d50cf2db166eaff3f2429425758d12205085eb5b
+  subpackages:
+  - codes
+  - credentials
+  - credentials/oauth
+  - grpclog
+  - internal
+  - keepalive
+  - metadata
+  - naming
+  - peer
+  - stats
+  - tap
+  - transport
+- name: gopkg.in/gin-gonic/gin.v1
+  version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
+- name: gopkg.in/go-playground/validator.v8
+  version: c193cecd124b5cc722d7ee5538e945bdb3348435
+- name: gopkg.in/yaml.v2
+  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
+testImports: []

@@ -1,0 +1,44 @@
+package: github.com/koichirokamoto/gko
+import:
+- package: cloud.google.com/go
+  subpackages:
+  - storage
+  - bigquery
+  - logging
+- package: github.com/golang/protobuf
+- package: github.com/koichirokamoto/webpush
+- package: github.com/mjibson/goon
+- package: github.com/sendgrid/rest
+- package: github.com/sendgrid/sendgrid-go
+  subpackages:
+  - helpers/mail
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: golang.org/x/oauth2
+  subpackages:
+  - google
+- package: golang.org/x/text
+  subpackages:
+  - encoding/japanese
+  - transform
+- package: google.golang.org/api
+  subpackages:
+  - admin/directory/v1
+  - calendar/v3
+  - oauth2/v2
+  - option
+  - support
+  - pubsub/v1
+- package: google.golang.org/appengine
+  subpackages:
+  - blobstore
+  - datastore
+  - log
+  - taskqueue
+  - urlfetch
+- package: github.com/RobotsAndPencils/buford
+  subpackages:
+  - certificate
+- package: github.com/koichirokamoto/apns
+- package: github.com/satori/go.uuid
