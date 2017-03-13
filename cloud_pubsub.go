@@ -12,9 +12,19 @@ import (
 )
 
 var (
-	_ CloudPubSubFactory = (*CloudPubSubFactoryImpl)(nil)
-	_ CloudPubSub        = (*CloudPubSubClient)(nil)
+	_ CloudPubSubFactory = (*cloudPubSubFactoryImpl)(nil)
+	_ CloudPubSub        = (*cloudPubSubClient)(nil)
 )
+
+var cloudPubSubFactory CloudPubSubFactory
+
+// GetCloudPubSubFactory return cloud pub/sub factory.
+func GetCloudPubSubFactory() CloudPubSubFactory {
+	if cloudPubSubFactory == nil {
+		cloudPubSubFactory = &cloudPubSubFactoryImpl{}
+	}
+	return cloudPubSubFactory
+}
 
 // Topic is cloud pubsub topic.
 type Topic string
@@ -30,11 +40,11 @@ type CloudPubSubFactory interface {
 	New(context.Context) (CloudPubSub, error)
 }
 
-// CloudPubSubFactoryImpl implements cloud pub/sub factory interface.
-type CloudPubSubFactoryImpl struct{}
+// cloudPubSubFactoryImpl implements cloud pub/sub factory interface.
+type cloudPubSubFactoryImpl struct{}
 
 // New return new cloud pub/sub client.
-func (c *CloudPubSubFactoryImpl) New(ctx context.Context) (CloudPubSub, error) {
+func (c *cloudPubSubFactoryImpl) New(ctx context.Context) (CloudPubSub, error) {
 	return newCloudPubSubClient(ctx)
 }
 
@@ -46,14 +56,14 @@ type CloudPubSub interface {
 	Publish(Topic, []*PubSubMessage) error
 }
 
-// CloudPubSubClient is cloud pubsub client
-type CloudPubSubClient struct {
+// cloudPubSubClient is cloud pubsub client
+type cloudPubSubClient struct {
 	ctx context.Context
 	s   *pubsub.Service
 }
 
 // newCloudPubSubClient return new cloud pubsub client.
-func newCloudPubSubClient(ctx context.Context) (*CloudPubSubClient, error) {
+func newCloudPubSubClient(ctx context.Context) (*cloudPubSubClient, error) {
 	client := oauth2.NewClient(ctx, google.AppEngineTokenSource(ctx, pubsub.PubsubScope))
 	s, err := pubsub.New(client)
 	if err != nil {
@@ -61,11 +71,11 @@ func newCloudPubSubClient(ctx context.Context) (*CloudPubSubClient, error) {
 		return nil, err
 	}
 
-	return &CloudPubSubClient{ctx, s}, nil
+	return &cloudPubSubClient{ctx, s}, nil
 }
 
 // CreateTopic create cloud pubsub topic.
-func (c *CloudPubSubClient) CreateTopic(topic Topic) error {
+func (c *cloudPubSubClient) CreateTopic(topic Topic) error {
 	t, err := c.s.Projects.Topics.Create(string(topic), &pubsub.Topic{}).Context(c.ctx).Do()
 	if err != nil {
 		ErrorLog(c.ctx, err.Error())
@@ -86,7 +96,7 @@ func (c *CloudPubSubClient) CreateTopic(topic Topic) error {
 }
 
 // GetTopic get cloud pubsub topic.
-func (c *CloudPubSubClient) GetTopic(topic Topic) error {
+func (c *cloudPubSubClient) GetTopic(topic Topic) error {
 	t, err := c.s.Projects.Topics.Get(string(topic)).Context(c.ctx).Do()
 	if err != nil {
 		ErrorLog(c.ctx, err.Error())
@@ -107,7 +117,7 @@ func (c *CloudPubSubClient) GetTopic(topic Topic) error {
 }
 
 // DeleteTopic delete cloud pubsub topic.
-func (c *CloudPubSubClient) DeleteTopic(topic Topic) error {
+func (c *cloudPubSubClient) DeleteTopic(topic Topic) error {
 	if err := c.GetTopic(topic); err != nil {
 		ErrorLog(c.ctx, err.Error())
 		return err
@@ -128,7 +138,7 @@ func (c *CloudPubSubClient) DeleteTopic(topic Topic) error {
 }
 
 // Publish publish messages to cloud pubsub topic.
-func (c *CloudPubSubClient) Publish(topic Topic, messages []*PubSubMessage) error {
+func (c *cloudPubSubClient) Publish(topic Topic, messages []*PubSubMessage) error {
 	pm := make([]*pubsub.PubsubMessage, 0, len(messages))
 	for _, m := range messages {
 		j, err := json.Marshal(m.Data)

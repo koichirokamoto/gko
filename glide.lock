@@ -1,5 +1,5 @@
-hash: 5ac5cd46ea8023f1bad7e8f4a50815cbb06606b768003aa93cf22df85c93a0c8
-updated: 2017-03-11T20:10:31.360451156+09:00
+hash: c06412ca2070a99f26074f2a97eb44bbedd1a736ee12a894c67b0fbc6f8d832c
+updated: 2017-03-13T11:24:44.437068049+09:00
 imports:
 - name: cloud.google.com/go
   version: 620e968dec62c9aac95a23e38e32e2cb831f73e3
@@ -20,11 +20,10 @@ imports:
   version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
   subpackages:
   - spew
-- name: github.com/gin-gonic/gin
-  version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
+- name: github.com/dgrijalva/jwt-go
+  version: 2268707a8f0843315e2004ee4f1d021dc08baedf
   subpackages:
-  - binding
-  - render
+  - request
 - name: github.com/golang/protobuf
   version: c9c7427a2a70d2eb3bafa0ab2dc163e45f143317
   subpackages:
@@ -42,10 +41,6 @@ imports:
   version: 4ee324a4babe553629ad60b1d3fe811ddf921a38
 - name: github.com/koichirokamoto/webpush
   version: 1f39463356a425c3ac1951fdf5df80d6a256eaf9
-- name: github.com/manucorporat/sse
-  version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
-- name: github.com/mattn/go-isatty
-  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
 - name: github.com/mjibson/goon
   version: ce6c18b635bb36342c10a151f79983efd70f96d6
 - name: github.com/pmezard/go-difflib
@@ -94,10 +89,6 @@ imports:
   - internal
   - jws
   - jwt
-- name: golang.org/x/sys
-  version: 99f16d856c9836c42d24e7ab64ea72916925fa97
-  subpackages:
-  - unix
 - name: golang.org/x/text
   version: f28f36722d5ef2f9655ad3de1f248e3e52ad5ebd
   subpackages:
@@ -135,6 +126,7 @@ imports:
   - internal/base
   - internal/datastore
   - internal/log
+  - internal/mail
   - internal/memcache
   - internal/modules
   - internal/remote_api
@@ -142,6 +134,7 @@ imports:
   - internal/taskqueue
   - internal/urlfetch
   - log
+  - mail
   - memcache
   - socket
   - taskqueue
@@ -170,10 +163,4 @@ imports:
   - stats
   - tap
   - transport
-- name: gopkg.in/gin-gonic/gin.v1
-  version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
-- name: gopkg.in/go-playground/validator.v8
-  version: c193cecd124b5cc722d7ee5538e945bdb3348435
-- name: gopkg.in/yaml.v2
-  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 testImports: []

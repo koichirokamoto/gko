@@ -11,20 +11,30 @@ import (
 )
 
 var (
-	_ BigQueryFactory = (*BigQueryFactoryImpl)(nil)
-	_ BigQuery        = (*BigQueryClient)(nil)
+	_ BigQueryFactory = (*bigQueryFactoryImpl)(nil)
+	_ BigQuery        = (*bigQueryClient)(nil)
 )
+
+var bigqueryFactory BigQueryFactory
+
+// GetBigQueryFactory return bigquery factory.
+func GetBigQueryFactory() BigQueryFactory {
+	if bigqueryFactory == nil {
+		bigqueryFactory = &bigQueryFactoryImpl{}
+	}
+	return bigqueryFactory
+}
 
 // BigQueryFactory is bigquery factory interface.
 type BigQueryFactory interface {
 	New(context.Context) (BigQuery, error)
 }
 
-// BigQueryFactoryImpl is implementation of bigquery factory.
-type BigQueryFactoryImpl struct{}
+// bigQueryFactoryImpl is implementation of bigquery factory.
+type bigQueryFactoryImpl struct{}
 
 // New return bigquery client.
-func (b *BigQueryFactoryImpl) New(ctx context.Context) (BigQuery, error) {
+func (b *bigQueryFactoryImpl) New(ctx context.Context) (BigQuery, error) {
 	return newBigQueryClient(ctx)
 }
 
@@ -46,25 +56,25 @@ type BigQueryWriter interface {
 	UploadRow(dataset, table, suffix string, src interface{}) error
 }
 
-// BigQueryClient is bigquery client.
-type BigQueryClient struct {
+// bigQueryClient is bigquery client.
+type bigQueryClient struct {
 	ctx    context.Context
 	client *bigquery.Client
 }
 
 // newBigQueryClient return new bigquery client.
-func newBigQueryClient(ctx context.Context) (*BigQueryClient, error) {
+func newBigQueryClient(ctx context.Context) (*bigQueryClient, error) {
 	client, err := bigquery.NewClient(ctx, appengine.AppID(ctx), option.WithTokenSource(google.AppEngineTokenSource(ctx)))
 	if err != nil {
 		ErrorLog(ctx, err.Error())
 		return nil, err
 	}
 
-	return &BigQueryClient{ctx, client}, nil
+	return &bigQueryClient{ctx, client}, nil
 }
 
 // Query run bigquery query, then return job.
-func (b *BigQueryClient) Query(q string) (*bigquery.Job, error) {
+func (b *bigQueryClient) Query(q string) (*bigquery.Job, error) {
 	query := b.client.Query(q)
 	query.UseStandardSQL = true
 	return query.Run(b.ctx)
@@ -73,17 +83,17 @@ func (b *BigQueryClient) Query(q string) (*bigquery.Job, error) {
 // CreateTable create table in dataset bigquery client have.
 //
 // This method always create table with standard sql option.
-func (b *BigQueryClient) CreateTable(dataset, table string) error {
+func (b *bigQueryClient) CreateTable(dataset, table string) error {
 	return b.client.Dataset(dataset).Table(table).Create(b.ctx, bigquery.UseStandardSQL())
 }
 
 // DeleteTable delete table in dataset bigquery client have.
-func (b *BigQueryClient) DeleteTable(dataset, table string) error {
+func (b *bigQueryClient) DeleteTable(dataset, table string) error {
 	return b.client.Dataset(dataset).Table(table).Delete(b.ctx)
 }
 
 // UploadRow upload one or more row.
-func (b *BigQueryClient) UploadRow(dataset, table, suffix string, src interface{}) error {
+func (b *bigQueryClient) UploadRow(dataset, table, suffix string, src interface{}) error {
 	t := b.client.Dataset(dataset).Table(table)
 	// check src is valid
 	if _, err := bigquery.InferSchema(src); err != nil {

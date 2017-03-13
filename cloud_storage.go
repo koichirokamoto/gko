@@ -15,9 +15,19 @@ import (
 )
 
 var (
-	_ CloudStorageFactory = (*CloudStorageFactoryImpl)(nil)
-	_ CloudStorage        = (*CloudStorageClient)(nil)
+	_ CloudStorageFactory = (*cloudStorageFactoryImpl)(nil)
+	_ CloudStorage        = (*cloudStorageClient)(nil)
 )
+
+var cloudStorageFactory CloudStorageFactory
+
+// GetCloudStorageFactory return cloud storage factory.
+func GetCloudStorageFactory() CloudStorageFactory {
+	if cloudStorageFactory == nil {
+		cloudStorageFactory = &cloudStorageFactoryImpl{}
+	}
+	return cloudStorageFactory
+}
 
 // Bucket is cloud storage Bucket.
 type Bucket string
@@ -32,11 +42,11 @@ type CloudStorageFactory interface {
 	New(context.Context) (CloudStorage, error)
 }
 
-// CloudStorageFactoryImpl is implementation of cloud storage factory.
-type CloudStorageFactoryImpl struct{}
+// cloudStorageFactoryImpl is implementation of cloud storage factory.
+type cloudStorageFactoryImpl struct{}
 
 // New return cloud storage client.
-func (c *CloudStorageFactoryImpl) New(ctx context.Context) (CloudStorage, error) {
+func (c *cloudStorageFactoryImpl) New(ctx context.Context) (CloudStorage, error) {
 	return newCloudStorageClient(ctx)
 }
 
@@ -59,25 +69,25 @@ type CloudStorageWriter interface {
 	Move(b Bucket, src, dst string) error
 }
 
-// CloudStorageClient is cloud storage client.
-type CloudStorageClient struct {
+// cloudStorageClient is cloud storage client.
+type cloudStorageClient struct {
 	ctx    context.Context
 	client *storage.Client
 }
 
 // newCloudStorageClient return new cloud storage client.
-func newCloudStorageClient(ctx context.Context) (*CloudStorageClient, error) {
+func newCloudStorageClient(ctx context.Context) (*cloudStorageClient, error) {
 	client, err := storage.NewClient(ctx, option.WithTokenSource(google.AppEngineTokenSource(ctx)))
 	if err != nil {
 		ErrorLog(ctx, err.Error())
 		return nil, err
 	}
 
-	return &CloudStorageClient{ctx, client}, nil
+	return &cloudStorageClient{ctx, client}, nil
 }
 
 // DownloadFile donwload from cloud storage, then return file data.
-func (c *CloudStorageClient) DownloadFile(b Bucket, filename string) ([]byte, error) {
+func (c *cloudStorageClient) DownloadFile(b Bucket, filename string) ([]byte, error) {
 	oh := c.client.Bucket(b.Name(c.ctx)).Object(filename)
 	r, err := oh.NewReader(c.ctx)
 	if err != nil {
@@ -94,7 +104,7 @@ func (c *CloudStorageClient) DownloadFile(b Bucket, filename string) ([]byte, er
 }
 
 // CreateFile create file in cloud storage.
-func (c *CloudStorageClient) CreateFile(b Bucket, filename string, r io.Reader) error {
+func (c *cloudStorageClient) CreateFile(b Bucket, filename string, r io.Reader) error {
 	oh := c.client.Bucket(b.Name(c.ctx)).Object(filename)
 	w := oh.NewWriter(c.ctx)
 	defer w.Close()
@@ -114,7 +124,7 @@ func (c *CloudStorageClient) CreateFile(b Bucket, filename string, r io.Reader) 
 }
 
 // DeleteFile delete file in cloud storage.
-func (c *CloudStorageClient) DeleteFile(b Bucket, filename string) error {
+func (c *cloudStorageClient) DeleteFile(b Bucket, filename string) error {
 	oh := c.client.Bucket(b.Name(c.ctx)).Object(filename)
 	if err := oh.Delete(c.ctx); err != nil {
 		ErrorLog(c.ctx, err.Error())
@@ -124,7 +134,7 @@ func (c *CloudStorageClient) DeleteFile(b Bucket, filename string) error {
 }
 
 // Copy copy file in cloud storage from src to dst.
-func (c *CloudStorageClient) Copy(b Bucket, src, dst string) error {
+func (c *cloudStorageClient) Copy(b Bucket, src, dst string) error {
 	bh := c.client.Bucket(b.Name(c.ctx))
 	soh := bh.Object(src)
 	doh := bh.Object(dst)
@@ -136,7 +146,7 @@ func (c *CloudStorageClient) Copy(b Bucket, src, dst string) error {
 }
 
 // Move move file in cloud storage from src to dst.
-func (c *CloudStorageClient) Move(b Bucket, src, dst string) error {
+func (c *cloudStorageClient) Move(b Bucket, src, dst string) error {
 	if err := c.Copy(b, src, dst); err != nil {
 		return err
 	}

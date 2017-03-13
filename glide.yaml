@@ -35,6 +35,7 @@ import:
   - blobstore
   - datastore
   - log
+  - mail
   - taskqueue
   - urlfetch
 - package: github.com/RobotsAndPencils/buford

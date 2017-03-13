@@ -11,20 +11,30 @@ import (
 )
 
 var (
-	_ CloudLoggingFactory = (*CloudLoggingFactoryImpl)(nil)
-	_ CloudLogging        = (*CloudLoggingClient)(nil)
+	_ CloudLoggingFactory = (*cloudLoggingFactoryImpl)(nil)
+	_ CloudLogging        = (*cloudLoggingClient)(nil)
 )
+
+var cloudLoggingFactory CloudLoggingFactory
+
+// GetCloudLogginFactory return cloud logging factory.
+func GetCloudLogginFactory() CloudLoggingFactory {
+	if cloudLoggingFactory == nil {
+		cloudLoggingFactory = &cloudLoggingFactoryImpl{}
+	}
+	return cloudLoggingFactory
+}
 
 // CloudLoggingFactory is cloud logging factory interface.
 type CloudLoggingFactory interface {
 	New(context.Context) (CloudLogging, error)
 }
 
-// CloudLoggingFactoryImpl implements cloud logging factory.
-type CloudLoggingFactoryImpl struct{}
+// cloudLoggingFactoryImpl implements cloud logging factory.
+type cloudLoggingFactoryImpl struct{}
 
 // New return new cloud logging client.
-func (c *CloudLoggingFactoryImpl) New(ctx context.Context) (CloudLogging, error) {
+func (c *cloudLoggingFactoryImpl) New(ctx context.Context) (CloudLogging, error) {
 	return newCloudLogginClient(ctx)
 }
 
@@ -33,25 +43,25 @@ type CloudLogging interface {
 	Send(logID, severity string, opts []logging.LoggerOption, payload interface{})
 }
 
-// CloudLoggingClient is cloud logging client.
-type CloudLoggingClient struct {
+// cloudLoggingClient is cloud logging client.
+type cloudLoggingClient struct {
 	ctx    context.Context
 	client *logging.Client
 }
 
 // newCloudLogginClient return new cloud logging client.
-func newCloudLogginClient(ctx context.Context) (*CloudLoggingClient, error) {
+func newCloudLogginClient(ctx context.Context) (*cloudLoggingClient, error) {
 	client, err := logging.NewClient(ctx, appengine.AppID(ctx), option.WithTokenSource(google.AppEngineTokenSource(ctx)))
 	if err != nil {
 		ErrorLog(ctx, err.Error())
 		return nil, err
 	}
 
-	return &CloudLoggingClient{ctx, client}, nil
+	return &cloudLoggingClient{ctx, client}, nil
 }
 
 // Send send payload to cloud logging.
-func (c *CloudLoggingClient) Send(logID, severity string, opts []logging.LoggerOption, payload interface{}) {
+func (c *cloudLoggingClient) Send(logID, severity string, opts []logging.LoggerOption, payload interface{}) {
 	l := c.client.Logger(logID, opts...)
 	e := logging.Entry{
 		InsertID:  RandSeq(32),
