@@ -21,7 +21,7 @@ func GoogleLoginURL(state, clientID, clientSecret, redirectURL string, opts ...o
 
 // TwitterLoginURL return twitter login url.
 func TwitterLoginURL(c context.Context, consumerKey, consumerSecret, oauthToken, oauthTokenSecret, callback string) (string, error) {
-	twitter := NewTwitterAPI(c, consumerKey, consumerSecret, oauthToken, oauthTokenSecret)
+	twitter := NewTwitterClient(c, consumerKey, consumerSecret, oauthToken, oauthTokenSecret)
 
 	params := url.Values{}
 	params.Set("oauth_callback", callback)

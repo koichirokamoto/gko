@@ -27,8 +27,8 @@ type TwitterToken struct {
 	oauthTokenSecret string
 }
 
-// TwitterAPI is twitter authentication.
-type TwitterAPI struct {
+// TwitterClient is twitter authentication.
+type TwitterClient struct {
 	consumerKey      string
 	consumerSecret   string
 	oauthToken       string
@@ -36,9 +36,9 @@ type TwitterAPI struct {
 	client           *http.Client
 }
 
-// NewTwitterAPI returns new twitter authentication.
-func NewTwitterAPI(c context.Context, consumerKey, consumerSecret, oauthToken, oauthTokenSecret string) *TwitterAPI {
-	return &TwitterAPI{
+// NewTwitterClient returns new twitter authentication.
+func NewTwitterClient(c context.Context, consumerKey, consumerSecret, oauthToken, oauthTokenSecret string) *TwitterClient {
+	return &TwitterClient{
 		consumerKey:      consumerKey,
 		consumerSecret:   consumerSecret,
 		oauthToken:       oauthToken,
@@ -48,7 +48,7 @@ func NewTwitterAPI(c context.Context, consumerKey, consumerSecret, oauthToken, o
 }
 
 // RequestToken requests token to twitter authentication.
-func (t *TwitterAPI) RequestToken(params url.Values) (*TwitterToken, error) {
+func (t *TwitterClient) RequestToken(params url.Values) (*TwitterToken, error) {
 	path := api + "/oauth/request_token"
 
 	res, err := t.request(http.MethodPost, path, params, false)
@@ -76,7 +76,7 @@ func (t *TwitterAPI) RequestToken(params url.Values) (*TwitterToken, error) {
 }
 
 // AccessToken requests access token.
-func (t *TwitterAPI) AccessToken(params url.Values) (*TwitterToken, error) {
+func (t *TwitterClient) AccessToken(params url.Values) (*TwitterToken, error) {
 	path := api + "/oauth/access_token"
 
 	res, err := t.request(http.MethodPost, path, params, false)
@@ -98,22 +98,22 @@ func (t *TwitterAPI) AccessToken(params url.Values) (*TwitterToken, error) {
 }
 
 // VerifyUser verfies user, then set user information to argument interface.
-func (t *TwitterAPI) VerifyUser(user interface{}, params url.Values) error {
+func (t *TwitterClient) VerifyUser(user interface{}, params url.Values) error {
 	return t.API(http.MethodGet, api+"/1.1/account/verify_credentials.json", params, user)
 }
 
 // Tweet tweets on timeline.
-func (t *TwitterAPI) Tweet(params url.Values) error {
+func (t *TwitterClient) Tweet(params url.Values) error {
 	return t.API(http.MethodPost, api+"/1.1/statuses/update.json", params, nil)
 }
 
 // Home gets home timeline.
-func (t *TwitterAPI) Home(timeline interface{}, params url.Values) error {
+func (t *TwitterClient) Home(timeline interface{}, params url.Values) error {
 	return t.API(http.MethodGet, api+"/1.1/statuses/home_timeline.json", params, timeline)
 }
 
 // API calls arbitary twitter api.
-func (t *TwitterAPI) API(method, path string, params url.Values, ret interface{}) error {
+func (t *TwitterClient) API(method, path string, params url.Values, ret interface{}) error {
 	res, err := t.request(method, path, params, true)
 	if err != nil {
 		return err
@@ -129,12 +129,12 @@ func (t *TwitterAPI) API(method, path string, params url.Values, ret interface{}
 }
 
 // SetToken sets oauth token and oauth secret to twitter authentication.
-func (t *TwitterAPI) SetToken(token *TwitterToken) {
+func (t *TwitterClient) SetToken(token *TwitterToken) {
 	t.oauthToken = token.oauthToken
 	t.oauthTokenSecret = token.oauthTokenSecret
 }
 
-func (t *TwitterAPI) request(method, path string, params url.Values, isAPI bool) (*http.Response, error) {
+func (t *TwitterClient) request(method, path string, params url.Values, isAPI bool) (*http.Response, error) {
 	var r io.Reader
 	reqPath := path
 	if params != nil {
@@ -165,7 +165,7 @@ func (t *TwitterAPI) request(method, path string, params url.Values, isAPI bool)
 	return res, nil
 }
 
-func (t *TwitterAPI) getHeader(method, path string, params url.Values) string {
+func (t *TwitterClient) getHeader(method, path string, params url.Values) string {
 	header, _ := CreateTwitterOauthHeader(method, path, t.consumerKey, t.consumerSecret, t.oauthToken, t.oauthTokenSecret, params)
 	return header
 }
