@@ -38,6 +38,7 @@ import:
   - mail
   - taskqueue
   - urlfetch
+  - aetest
 - package: github.com/RobotsAndPencils/buford
   subpackages:
   - certificate

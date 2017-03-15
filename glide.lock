@@ -1,5 +1,5 @@
-hash: c06412ca2070a99f26074f2a97eb44bbedd1a736ee12a894c67b0fbc6f8d832c
-updated: 2017-03-13T11:24:44.437068049+09:00
+hash: fdffc34498eaab5ed580e915dc9a3f91deba2c9ab0e79eeea55e994b3793a539
+updated: 2017-03-15T09:53:29.196065537+09:00
 imports:
 - name: cloud.google.com/go
   version: 620e968dec62c9aac95a23e38e32e2cb831f73e3
@@ -119,6 +119,7 @@ imports:
 - name: google.golang.org/appengine
   version: b79c28f0197795b4050bfcd7c4c2209136c594b1
   subpackages:
+  - aetest
   - blobstore
   - datastore
   - internal
@@ -133,12 +134,14 @@ imports:
   - internal/socket
   - internal/taskqueue
   - internal/urlfetch
+  - internal/user
   - log
   - mail
   - memcache
   - socket
   - taskqueue
   - urlfetch
+  - user
 - name: google.golang.org/genproto
   version: 1e95789587db7d93ebbaa5eb65da17d3dbf8ab64
   subpackages:
