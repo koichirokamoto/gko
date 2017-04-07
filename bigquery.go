@@ -1,8 +1,6 @@
 package gko
 
 import (
-	"errors"
-
 	"cloud.google.com/go/bigquery"
 
 	"golang.org/x/net/context"
@@ -33,7 +31,7 @@ func GetGAEBigQueryFactory() BigQueryFactory {
 }
 
 // GetBigQueryFactory return bigquery factory.
-func GetBigQueryFactory(factory BigQueryFactory) BigQueryFactory {
+func GetBigQueryFactory() BigQueryFactory {
 	if bigqueryFactory == nil {
 		bigqueryFactory = &bigQueryFactoryImpl{}
 	}
@@ -74,6 +72,7 @@ type BigQuery interface {
 // BigQueryReader is bigquery reader interface.
 type BigQueryReader interface {
 	Query(string, bool) (*bigquery.Job, error)
+	GetQueryResult(*bigquery.Job) (*bigquery.RowIterator, error)
 }
 
 // BigQueryWriter is bigquery writer interface.
@@ -102,12 +101,7 @@ func newGAEBigQueryClient(ctx context.Context) (*bigQueryClient, error) {
 
 // newBigQueryClient return new bigquery client.
 func newBigQueryClient(ctx context.Context) (*bigQueryClient, error) {
-	projectID, ok := ctx.Value(GCPProjectID).(string)
-	if !ok {
-		return nil, errors.New("project id is not in context")
-	}
-
-	t, err := google.DefaultTokenSource(ctx, bigquery.Scope)
+	t, projectID, err := getDefaultTokenSource(ctx, bigquery.Scope)
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +121,19 @@ func (b *bigQueryClient) Query(q string, useStdSQL bool) (*bigquery.Job, error) 
 	return query.Run(b.ctx)
 }
 
+func (b *bigQueryClient) GetQueryResult(job *bigquery.Job) (*bigquery.RowIterator, error) {
+	stat, err := job.Wait(b.ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if stat.Err() != nil {
+		return nil, stat.Err()
+	}
+
+	return job.Read(b.ctx)
+}
+
 // CreateTable create table in dataset bigquery client have.
 //
 // This method always create table with standard sql option.
@@ -144,7 +151,6 @@ func (b *bigQueryClient) UploadRow(dataset, table, suffix string, src interface{
 	t := b.client.Dataset(dataset).Table(table)
 	// check src is valid
 	if _, err := bigquery.InferSchema(src); err != nil {
-		ErrorLog(b.ctx, err.Error())
 		return err
 	}
 

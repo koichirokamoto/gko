@@ -1,7 +1,11 @@
 package gko
 
 import (
+	"context"
+	"errors"
+
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 const (
@@ -30,3 +34,17 @@ type GCPConfigKey int
 
 // GCPProjectID is google cloud platform project id key.
 var GCPProjectID GCPConfigKey = 1
+
+func getDefaultTokenSource(ctx context.Context, scopes ...string) (oauth2.TokenSource, string, error) {
+	projectID, ok := ctx.Value(GCPProjectID).(string)
+	if !ok {
+		return nil, "", errors.New("project id is not in context")
+	}
+
+	t, err := google.DefaultTokenSource(ctx, scopes...)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return t, projectID, nil
+}
