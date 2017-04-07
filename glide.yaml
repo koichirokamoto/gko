@@ -5,6 +5,7 @@ import:
   - storage
   - bigquery
   - logging
+  - datastore
 - package: github.com/golang/protobuf
 - package: github.com/koichirokamoto/webpush
 - package: github.com/mjibson/goon
