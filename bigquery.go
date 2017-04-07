@@ -1,6 +1,8 @@
 package gko
 
 import (
+	"errors"
+
 	"cloud.google.com/go/bigquery"
 
 	"golang.org/x/net/context"
@@ -11,15 +13,32 @@ import (
 )
 
 var (
+	_ BigQueryFactory = (*gaeBigQueryFactoryImpl)(nil)
 	_ BigQueryFactory = (*bigQueryFactoryImpl)(nil)
 	_ BigQuery        = (*bigQueryClient)(nil)
 )
 
 var bigqueryFactory BigQueryFactory
 
-// GetBigQueryFactory return bigquery factory.
-func GetBigQueryFactory() BigQueryFactory {
+// GetGAEBigQueryFactory return bigquery factory.
+func GetGAEBigQueryFactory() BigQueryFactory {
 	if bigqueryFactory == nil {
+		bigqueryFactory = &gaeBigQueryFactoryImpl{}
+	}
+	_, ok := bigqueryFactory.(*gaeBigQueryFactoryImpl)
+	if !ok {
+		bigqueryFactory = &gaeBigQueryFactoryImpl{}
+	}
+	return bigqueryFactory
+}
+
+// GetBigQueryFactory return bigquery factory.
+func GetBigQueryFactory(factory BigQueryFactory) BigQueryFactory {
+	if bigqueryFactory == nil {
+		bigqueryFactory = &bigQueryFactoryImpl{}
+	}
+	_, ok := bigqueryFactory.(*bigQueryFactoryImpl)
+	if !ok {
 		bigqueryFactory = &bigQueryFactoryImpl{}
 	}
 	return bigqueryFactory
@@ -30,7 +49,15 @@ type BigQueryFactory interface {
 	New(context.Context) (BigQuery, error)
 }
 
-// bigQueryFactoryImpl is implementation of bigquery factory.
+// gaeBigQueryFactoryImpl is implementation of gae bigquery factory.
+type gaeBigQueryFactoryImpl struct{}
+
+// New return gae bigquery client.
+func (b *gaeBigQueryFactoryImpl) New(ctx context.Context) (BigQuery, error) {
+	return newGAEBigQueryClient(ctx)
+}
+
+// gaeBigQueryFactoryImpl is implementation of bigquery factory.
 type bigQueryFactoryImpl struct{}
 
 // New return bigquery client.
@@ -46,7 +73,7 @@ type BigQuery interface {
 
 // BigQueryReader is bigquery reader interface.
 type BigQueryReader interface {
-	Query(string) (*bigquery.Job, error)
+	Query(string, bool) (*bigquery.Job, error)
 }
 
 // BigQueryWriter is bigquery writer interface.
@@ -62,8 +89,8 @@ type bigQueryClient struct {
 	client *bigquery.Client
 }
 
-// newBigQueryClient return new bigquery client.
-func newBigQueryClient(ctx context.Context) (*bigQueryClient, error) {
+// newGAEBigQueryClient return new gae bigquery client.
+func newGAEBigQueryClient(ctx context.Context) (*bigQueryClient, error) {
 	client, err := bigquery.NewClient(ctx, appengine.AppID(ctx), option.WithTokenSource(google.AppEngineTokenSource(ctx)))
 	if err != nil {
 		ErrorLog(ctx, err.Error())
@@ -73,10 +100,30 @@ func newBigQueryClient(ctx context.Context) (*bigQueryClient, error) {
 	return &bigQueryClient{ctx, client}, nil
 }
 
+// newBigQueryClient return new bigquery client.
+func newBigQueryClient(ctx context.Context) (*bigQueryClient, error) {
+	projectID, ok := ctx.Value(GCPProjectID).(string)
+	if !ok {
+		return nil, errors.New("project id is not in context")
+	}
+
+	t, err := google.DefaultTokenSource(ctx, bigquery.Scope)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := bigquery.NewClient(ctx, projectID, option.WithTokenSource(t))
+	if err != nil {
+		return nil, err
+	}
+
+	return &bigQueryClient{ctx, client}, nil
+}
+
 // Query run bigquery query, then return job.
-func (b *bigQueryClient) Query(q string) (*bigquery.Job, error) {
+func (b *bigQueryClient) Query(q string, useStdSQL bool) (*bigquery.Job, error) {
 	query := b.client.Query(q)
-	query.UseStandardSQL = true
+	query.UseStandardSQL = useStdSQL
 	return query.Run(b.ctx)
 }
 

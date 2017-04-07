@@ -24,3 +24,9 @@ func GoogleOAuth2Config(clientID, clientSecret, redirectURL string) oauth2.Confi
 	oauth2Config.RedirectURL = redirectURL
 	return oauth2Config
 }
+
+// GCPConfigKey is google cloud platform config key.
+type GCPConfigKey int
+
+// GCPProjectID is google cloud platform project id key.
+var GCPProjectID GCPConfigKey = 1
