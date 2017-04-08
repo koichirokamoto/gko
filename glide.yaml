@@ -6,6 +6,7 @@ import:
   - bigquery
   - logging
   - datastore
+  - pubsub
 - package: github.com/golang/protobuf
 - package: github.com/koichirokamoto/webpush
 - package: github.com/mjibson/goon
@@ -30,7 +31,6 @@ import:
   - oauth2/v2
   - option
   - support
-  - pubsub/v1
 - package: google.golang.org/appengine
   subpackages:
   - blobstore

@@ -29,14 +29,19 @@ func GoogleOAuth2Config(clientID, clientSecret, redirectURL string) oauth2.Confi
 	return oauth2Config
 }
 
-// GCPConfigKey is google cloud platform config key.
-type GCPConfigKey int
+// gcpConfigKey is google cloud platform config key.
+type gcpConfigKey int
 
-// GCPProjectID is google cloud platform project id key.
-var GCPProjectID GCPConfigKey = 1
+// gcpProjectID is google cloud platform project id key.
+var gcpProjectID gcpConfigKey = 1
+
+// GCPDefaultContext create gcp default context from context.
+func GCPDefaultContext(parent context.Context, projectID string) context.Context {
+	return context.WithValue(parent, gcpProjectID, projectID)
+}
 
 func getDefaultTokenSource(ctx context.Context, scopes ...string) (oauth2.TokenSource, string, error) {
-	projectID, ok := ctx.Value(GCPProjectID).(string)
+	projectID, ok := ctx.Value(gcpProjectID).(string)
 	if !ok {
 		return nil, "", errors.New("project id is not in context")
 	}

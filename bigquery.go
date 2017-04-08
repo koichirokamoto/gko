@@ -4,31 +4,16 @@ import (
 	"cloud.google.com/go/bigquery"
 
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2/google"
 
 	"google.golang.org/api/option"
-	"google.golang.org/appengine"
 )
 
 var (
-	_ BigQueryFactory = (*gaeBigQueryFactoryImpl)(nil)
 	_ BigQueryFactory = (*bigQueryFactoryImpl)(nil)
 	_ BigQuery        = (*bigQueryClient)(nil)
 )
 
 var bigqueryFactory BigQueryFactory
-
-// GetGAEBigQueryFactory return bigquery factory.
-func GetGAEBigQueryFactory() BigQueryFactory {
-	if bigqueryFactory == nil {
-		bigqueryFactory = &gaeBigQueryFactoryImpl{}
-	}
-	_, ok := bigqueryFactory.(*gaeBigQueryFactoryImpl)
-	if !ok {
-		bigqueryFactory = &gaeBigQueryFactoryImpl{}
-	}
-	return bigqueryFactory
-}
 
 // GetBigQueryFactory return bigquery factory.
 func GetBigQueryFactory() BigQueryFactory {
@@ -45,14 +30,6 @@ func GetBigQueryFactory() BigQueryFactory {
 // BigQueryFactory is bigquery factory interface.
 type BigQueryFactory interface {
 	New(context.Context) (BigQuery, error)
-}
-
-// gaeBigQueryFactoryImpl is implementation of gae bigquery factory.
-type gaeBigQueryFactoryImpl struct{}
-
-// New return gae bigquery client.
-func (b *gaeBigQueryFactoryImpl) New(ctx context.Context) (BigQuery, error) {
-	return newGAEBigQueryClient(ctx)
 }
 
 // gaeBigQueryFactoryImpl is implementation of bigquery factory.
@@ -86,17 +63,6 @@ type BigQueryWriter interface {
 type bigQueryClient struct {
 	ctx    context.Context
 	client *bigquery.Client
-}
-
-// newGAEBigQueryClient return new gae bigquery client.
-func newGAEBigQueryClient(ctx context.Context) (*bigQueryClient, error) {
-	client, err := bigquery.NewClient(ctx, appengine.AppID(ctx), option.WithTokenSource(google.AppEngineTokenSource(ctx)))
-	if err != nil {
-		ErrorLog(ctx, err.Error())
-		return nil, err
-	}
-
-	return &bigQueryClient{ctx, client}, nil
 }
 
 // newBigQueryClient return new bigquery client.

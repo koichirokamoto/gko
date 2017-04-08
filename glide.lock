@@ -1,5 +1,5 @@
-hash: ca34fcbebd890eb96e3b47d1af8709fbe277924ed9a10bcc4eeaa511457b93a2
-updated: 2017-04-07T15:38:38.926239622+09:00
+hash: 59af35b6443e72c152c6b33201d61350e2c7feb28d91297f687d1f7a4577d6d2
+updated: 2017-04-09T01:21:31.78334332+09:00
 imports:
 - name: cloud.google.com/go
   version: 620e968dec62c9aac95a23e38e32e2cb831f73e3
@@ -8,6 +8,7 @@ imports:
   - civil
   - compute/metadata
   - datastore
+  - iam
   - internal
   - internal/atomiccache
   - internal/fields
@@ -16,6 +17,8 @@ imports:
   - logging
   - logging/apiv2
   - logging/internal
+  - pubsub
+  - pubsub/apiv1
   - storage
 - name: github.com/davecgh/go-spew
   version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
@@ -36,6 +39,7 @@ imports:
   - ptypes/empty
   - ptypes/struct
   - ptypes/timestamp
+  - ptypes/wrappers
 - name: github.com/googleapis/gax-go
   version: 8c5154c0fe5bf18cf649634d4c6df50897a32751
 - name: github.com/koichirokamoto/apns
@@ -112,7 +116,6 @@ imports:
   - iterator
   - oauth2/v2
   - option
-  - pubsub/v1
   - storage/v1
   - support
   - support/bundler
@@ -149,9 +152,13 @@ imports:
   - googleapis/api/annotations
   - googleapis/api/label
   - googleapis/api/monitoredres
+  - googleapis/datastore/v1
+  - googleapis/iam/v1
   - googleapis/logging/type
   - googleapis/logging/v2
+  - googleapis/pubsub/v1
   - googleapis/rpc/status
+  - googleapis/type/latlng
 - name: google.golang.org/grpc
   version: d50cf2db166eaff3f2429425758d12205085eb5b
   subpackages:

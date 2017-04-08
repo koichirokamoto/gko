@@ -8,7 +8,6 @@ import (
 	"cloud.google.com/go/storage"
 
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2/google"
 
 	"google.golang.org/api/option"
 	"google.golang.org/appengine"
@@ -77,9 +76,13 @@ type cloudStorageClient struct {
 
 // newCloudStorageClient return new cloud storage client.
 func newCloudStorageClient(ctx context.Context) (*cloudStorageClient, error) {
-	client, err := storage.NewClient(ctx, option.WithTokenSource(google.AppEngineTokenSource(ctx)))
+	t, _, err := getDefaultTokenSource(ctx, storage.ScopeFullControl)
 	if err != nil {
-		ErrorLog(ctx, err.Error())
+		return nil, err
+	}
+
+	client, err := storage.NewClient(ctx, option.WithTokenSource(t))
+	if err != nil {
 		return nil, err
 	}
 
@@ -91,13 +94,11 @@ func (c *cloudStorageClient) DownloadFile(b Bucket, filename string) ([]byte, er
 	oh := c.client.Bucket(b.Name(c.ctx)).Object(filename)
 	r, err := oh.NewReader(c.ctx)
 	if err != nil {
-		ErrorLog(c.ctx, err.Error())
 		return nil, err
 	}
 
 	file, err := ioutil.ReadAll(r)
 	if err != nil {
-		ErrorLog(c.ctx, err.Error())
 		return nil, err
 	}
 	return file, nil
@@ -111,12 +112,10 @@ func (c *cloudStorageClient) CreateFile(b Bucket, filename string, r io.Reader) 
 
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
-		ErrorLog(c.ctx, err.Error())
 		return err
 	}
 
 	if _, err := w.Write(data); err != nil {
-		ErrorLog(c.ctx, err.Error())
 		return err
 	}
 
@@ -127,7 +126,6 @@ func (c *cloudStorageClient) CreateFile(b Bucket, filename string, r io.Reader) 
 func (c *cloudStorageClient) DeleteFile(b Bucket, filename string) error {
 	oh := c.client.Bucket(b.Name(c.ctx)).Object(filename)
 	if err := oh.Delete(c.ctx); err != nil {
-		ErrorLog(c.ctx, err.Error())
 		return err
 	}
 	return nil
@@ -139,7 +137,6 @@ func (c *cloudStorageClient) Copy(b Bucket, src, dst string) error {
 	soh := bh.Object(src)
 	doh := bh.Object(dst)
 	if _, err := doh.CopierFrom(soh).Run(c.ctx); err != nil {
-		ErrorLog(c.ctx, err.Error())
 		return err
 	}
 	return nil

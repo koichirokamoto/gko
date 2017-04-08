@@ -5,9 +5,7 @@ import (
 
 	"cloud.google.com/go/logging"
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
-	"google.golang.org/appengine"
 )
 
 var (
@@ -51,9 +49,13 @@ type cloudLoggingClient struct {
 
 // newCloudLogginClient return new cloud logging client.
 func newCloudLogginClient(ctx context.Context) (*cloudLoggingClient, error) {
-	client, err := logging.NewClient(ctx, appengine.AppID(ctx), option.WithTokenSource(google.AppEngineTokenSource(ctx)))
+	t, projectID, err := getDefaultTokenSource(ctx, logging.AdminScope)
 	if err != nil {
-		ErrorLog(ctx, err.Error())
+		return nil, err
+	}
+
+	client, err := logging.NewClient(ctx, projectID, option.WithTokenSource(t))
+	if err != nil {
 		return nil, err
 	}
 
