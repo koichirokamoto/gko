@@ -152,7 +152,6 @@ type apnsWorker struct {
 func (a *apnsWorker) work() error {
 	cert, err := certificate.Load(a.config.filename, a.config.password)
 	if err != nil {
-		ErrorLog(a.ctx, err.Error())
 		return err
 	}
 
@@ -163,19 +162,16 @@ func (a *apnsWorker) work() error {
 
 	conn, err := socket.Dial(a.ctx, "tcp", apnsGateway)
 	if err != nil {
-		ErrorLog(a.ctx, err.Error())
 		return err
 	}
 
 	tlsconn := tls.Client(conn, tlsconfig)
 	if err := tlsconn.Handshake(); err != nil {
-		ErrorLog(a.ctx, err.Error())
 		return err
 	}
 	defer tlsconn.Close()
 
 	if _, err := tlsconn.Write(a.payload); err != nil {
-		ErrorLog(a.ctx, err.Error())
 		return err
 	}
 
@@ -188,7 +184,6 @@ func (a *apnsWorker) handleErr() <-chan struct{} {
 	go func() {
 		for a.count < a.limit {
 			if err := a.work(); err != nil {
-				WaitExponentialTime(a.count)
 				a.count++
 				continue
 			}

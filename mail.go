@@ -81,21 +81,17 @@ func (s *sendGridMailClient) Send(from, subject, content, contentType string, to
 
 	httpreq, err := rest.BuildRequestObject(req)
 	if err != nil {
-		ErrorLog(s.ctx, err.Error())
 		return err
 	}
 	res, err := urlfetch.Client(s.ctx).Do(httpreq)
 	if err != nil {
-		ErrorLog(s.ctx, err.Error())
 		return err
 	} else if 400 <= res.StatusCode {
 		msg, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			ErrorLog(s.ctx, err.Error())
 			return err
 		}
-		ErrorLog(s.ctx, "response status is in error range, %d, %s", res.StatusCode, msg)
-		return fmt.Errorf("status code is in error range")
+		return fmt.Errorf("status code is in error range, %s", msg)
 	}
 	return nil
 }
