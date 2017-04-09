@@ -8,13 +8,18 @@ import (
 	"net/http"
 	"strings"
 
+	"sync"
+
 	"github.com/RobotsAndPencils/buford/certificate"
 	"github.com/koichirokamoto/apns"
 	"github.com/koichirokamoto/webpush"
 	"golang.org/x/net/context"
+	"google.golang.org/api/gensupport"
 	"google.golang.org/appengine/socket"
 	"google.golang.org/appengine/urlfetch"
 )
+
+var pushEb = gensupport.DefaultBackoffStrategy()
 
 const (
 	fcmURL = "https://fcm.googleapis.com/fcm/send"
@@ -23,53 +28,45 @@ const (
 
 type worker interface {
 	work() error
-	handleErr() <-chan struct{}
 }
 
 func runWorker(wrk <-chan worker) {
-	retried := make([](<-chan struct{}), 0)
+	var wg sync.WaitGroup
 	for w := range wrk {
-		if err := w.work(); err != nil {
-			retried = append(retried, w.handleErr())
-		}
+		wg.Add(1)
+		go func(w worker) {
+			defer wg.Done()
+			Retry(w.work, pushEb)
+		}(w)
 	}
-
-	for _, r := range retried {
-		<-r
-	}
+	wg.Wait()
 }
 
-// FcmSub is fcm subscription.
-type FcmSub struct {
+// FcmSubscription is fcm subscription.
+type FcmSubscription struct {
 	Endpoint string
 	Key      string
 	Auth     string
 }
 
 // SendFcmNotification push fcm notification to user.
-func SendFcmNotification(ctx context.Context, subs []*FcmSub, payload []byte) error {
-	serverKey := ""
+func SendFcmNotification(ctx context.Context, serverKey string, subs []*FcmSubscription, payload []byte) {
 	in := make(chan worker)
 	go func() {
 		for _, sub := range subs {
-			in <- &fcmWorker{ctx, sub, payload, serverKey, 0, 5}
+			in <- &fcmWorker{ctx, sub, payload, serverKey}
 		}
 		close(in)
 	}()
 
-	InfoLog(ctx, "Send fcm notification worker start...")
 	runWorker(in)
-	InfoLog(ctx, "Send fcm notification worker end...")
-	return nil
 }
 
 type fcmWorker struct {
 	ctx       context.Context
-	sub       *FcmSub
+	sub       *FcmSubscription
 	payload   []byte
 	serverKey string
-	count     uint
-	limit     uint
 }
 
 func (f *fcmWorker) work() error {
@@ -97,60 +94,40 @@ func (f *fcmWorker) work() error {
 	return nil
 }
 
-func (f *fcmWorker) handleErr() <-chan struct{} {
-	fin := make(chan struct{}, 1)
-	go func() {
-		for f.count < f.limit {
-			if err := f.work(); err != nil {
-				WaitExponentialTime(f.count)
-				f.count++
-				continue
-			}
-		}
-		close(fin)
-	}()
-	return fin
-}
-
 const apnsGateway = "gateway.push.apple.com:2195"
 
-type apnsConfig struct {
-	filename string
-	password string
-	host     string
+// ApnsConfig is apns notification setting.
+type ApnsConfig struct {
+	Filename string
+	Password string
+	Host     string
 }
 
 // SendApnsNotification send apns2 notification.
-func SendApnsNotification(ctx context.Context, deviceTokens []string, config *apnsConfig, notification *apns.PushNotification) error {
+func SendApnsNotification(ctx context.Context, deviceTokens []string, config *ApnsConfig, notification *apns.PushNotification) {
 	in := make(chan worker)
 	go func() {
 		for _, d := range deviceTokens {
 			payload, err := notification.ToBytes(d)
 			if err != nil {
-				WarningLog(ctx, err.Error())
 				continue
 			}
-			in <- &apnsWorker{ctx, config, payload, 0, 5}
+			in <- &apnsWorker{ctx, config, payload}
 		}
 		close(in)
 	}()
 
-	InfoLog(ctx, "Send apns notification worker start...")
 	runWorker(in)
-	InfoLog(ctx, "Send apns notification worker end...")
-	return nil
 }
 
 type apnsWorker struct {
 	ctx     context.Context
-	config  *apnsConfig
+	config  *ApnsConfig
 	payload []byte
-	count   uint
-	limit   uint
 }
 
 func (a *apnsWorker) work() error {
-	cert, err := certificate.Load(a.config.filename, a.config.password)
+	cert, err := certificate.Load(a.config.Filename, a.config.Password)
 	if err != nil {
 		return err
 	}
@@ -177,18 +154,4 @@ func (a *apnsWorker) work() error {
 
 	// TODO: handle apns feedback or error
 	return nil
-}
-
-func (a *apnsWorker) handleErr() <-chan struct{} {
-	fin := make(chan struct{}, 1)
-	go func() {
-		for a.count < a.limit {
-			if err := a.work(); err != nil {
-				a.count++
-				continue
-			}
-		}
-		close(fin)
-	}()
-	return fin
 }

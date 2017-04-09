@@ -3,10 +3,8 @@ package gko
 import (
 	"fmt"
 	"io"
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	uuid "github.com/satori/go.uuid"
 
@@ -20,41 +18,6 @@ func SafeURL(s string) string {
 	s = strings.Replace(s, "/", "_", -1)
 	s = strings.Replace(s, "=", "", -1)
 	return s
-}
-
-// Retry is interface do retry.
-type Retry interface {
-	DoRetry() error
-	HandleError(error) bool
-}
-
-// ExponentialBackoff is implementation of exponential backoff.
-func ExponentialBackoff(r Retry, count uint) error {
-	var tried uint
-	if count <= 0 {
-		count = 1
-	}
-
-	var err error
-	for tried < count {
-		if err = r.DoRetry(); err != nil && r.HandleError(err) {
-			WaitExponentialTime(tried)
-			tried++
-			continue
-		}
-		break
-	}
-	return err
-}
-
-// WaitExponentialTime stop thread during exponential time based on argument.
-func WaitExponentialTime(count uint) {
-	rand.Seed(time.Now().UnixNano())
-	t := time.After(time.Duration((1<<count)*1000+rand.Intn(10)*100) * time.Millisecond)
-	select {
-	case <-t:
-		return
-	}
 }
 
 // UUID generate string formatted by uuid.
