@@ -15,7 +15,7 @@ var (
 var cloudDatastoreFactory CloudDatastoreFactory
 
 // GetCloudDatastoreFactory return cloudDatastore factory.
-func GetCloudDatastoreFactory(factory CloudDatastoreFactory) CloudDatastoreFactory {
+func GetCloudDatastoreFactory() CloudDatastoreFactory {
 	if cloudDatastoreFactory == nil {
 		cloudDatastoreFactory = &cloudDatastoreFactoryImpl{}
 	}
@@ -41,6 +41,7 @@ func (b *cloudDatastoreFactoryImpl) New(ctx context.Context) (CloudDatastore, er
 
 // CloudDatastore is cloudDatastore interface along with reader and writer.
 type CloudDatastore interface {
+	GetAll(*datastore.Query, interface{}) ([]*datastore.Key, error)
 }
 
 // cloudDatastoreClient is cloud datastore client
@@ -64,6 +65,6 @@ func newCloudDatastoreClient(ctx context.Context) (*cloudDatastoreClient, error)
 }
 
 // GetAll get all entities from cloud datastore.
-func (c *cloudDatastoreClient) GetAll(q *datastore.Query, dst []interface{}) ([]*datastore.Key, error) {
+func (c *cloudDatastoreClient) GetAll(q *datastore.Query, dst interface{}) ([]*datastore.Key, error) {
 	return c.client.GetAll(c.ctx, q, dst)
 }
