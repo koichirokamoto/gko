@@ -64,6 +64,16 @@ func newCloudDatastoreClient(ctx context.Context) (*cloudDatastoreClient, error)
 	return &cloudDatastoreClient{ctx, client}, nil
 }
 
+// Get get entity from key.
+func (c *cloudDatastoreClient) Get(key *datastore.Key, dst interface{}) error {
+	return c.GetMulti([]*datastore.Key{key}, []interface{}{dst})
+}
+
+// GetMulti get entities from keys.
+func (c *cloudDatastoreClient) GetMulti(keys []*datastore.Key, dst interface{}) error {
+	return c.client.GetMulti(c.ctx, keys, dst)
+}
+
 // GetAll get all entities from cloud datastore.
 func (c *cloudDatastoreClient) GetAll(q *datastore.Query, dst interface{}) ([]*datastore.Key, error) {
 	return c.client.GetAll(c.ctx, q, dst)
