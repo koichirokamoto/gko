@@ -1,8 +1,8 @@
 hash: 59af35b6443e72c152c6b33201d61350e2c7feb28d91297f687d1f7a4577d6d2
-updated: 2017-04-09T01:21:31.78334332+09:00
+updated: 2017-04-11T11:56:48.176941646+09:00
 imports:
 - name: cloud.google.com/go
-  version: 620e968dec62c9aac95a23e38e32e2cb831f73e3
+  version: 1180f1d0d05f61a65f39b3b9be37815493758d2f
   subpackages:
   - bigquery
   - civil
@@ -29,7 +29,7 @@ imports:
   subpackages:
   - request
 - name: github.com/golang/protobuf
-  version: c9c7427a2a70d2eb3bafa0ab2dc163e45f143317
+  version: 2bba0603135d7d7f5cb73b2125beeda19c09f4ef
   subpackages:
   - proto
   - protoc-gen-go/descriptor
@@ -41,7 +41,7 @@ imports:
   - ptypes/timestamp
   - ptypes/wrappers
 - name: github.com/googleapis/gax-go
-  version: 8c5154c0fe5bf18cf649634d4c6df50897a32751
+  version: 9af46dd5a1713e8b5cd71106287eba3cefdde50b
 - name: github.com/koichirokamoto/apns
   version: 4ee324a4babe553629ad60b1d3fe811ddf921a38
 - name: github.com/koichirokamoto/webpush
@@ -57,11 +57,11 @@ imports:
   subpackages:
   - certificate
 - name: github.com/satori/go.uuid
-  version: b061729afc07e77a8aa4fad0a2fd840958f1942a
+  version: 5bf94b69c6b68ee1b541973bb8e1144db23a194b
 - name: github.com/sendgrid/rest
-  version: 3ec51b4f1754e13e92409355851a0a82e9a06461
+  version: 14de1ac72d9ae5c3c0d7c02164c52ebd3b951a4e
 - name: github.com/sendgrid/sendgrid-go
-  version: d087004b4d47c2a378ade9eb3957571114b91493
+  version: 22e570ec3adefad019c6c8ffbead6c515ca84062
   subpackages:
   - helpers/mail
 - name: github.com/stretchr/objx
@@ -72,12 +72,12 @@ imports:
   - assert
   - mock
 - name: golang.org/x/crypto
-  version: 728b753d0135da6801d45a38e6f43ff55779c5c2
+  version: 9ef620b9ca2f82b55030ffd4f41327fa9e77a92c
   subpackages:
   - pkcs12
   - pkcs12/internal/rc2
 - name: golang.org/x/net
-  version: a6577fac2d73be281a500b310739095313165611
+  version: d1e1b351919c6738fdeb9893d5c998b161464f0c
   subpackages:
   - context
   - context/ctxhttp
@@ -88,27 +88,35 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/oauth2
-  version: efb10a30610e617dbb17fc243f4cc61a8cfa2903
+  version: 7fdf09982454086d5570c7db3e11f360194830ca
   subpackages:
   - google
   - internal
   - jws
   - jwt
+- name: golang.org/x/sync
+  version: 5a06fca2c336a4b2b2fcb45702e8c47621b2aa2c
+  subpackages:
+  - semaphore
 - name: golang.org/x/text
-  version: f28f36722d5ef2f9655ad3de1f248e3e52ad5ebd
+  version: f4b4367115ec2de254587813edaa901bc1c723a8
   subpackages:
   - encoding
   - encoding/internal
   - encoding/internal/identifier
   - encoding/japanese
+  - secure/bidirule
   - transform
+  - unicode/bidi
+  - unicode/norm
 - name: google.golang.org/api
-  version: 1202890e803f07684581b575fda809bf335a533f
+  version: 48e49d1645e228d1c50c3d54fb476b2224477303
   subpackages:
   - admin/directory/v1
   - bigquery/v2
   - calendar/v3
   - gensupport
+  - gmail/v1
   - googleapi
   - googleapi/internal/uritemplates
   - googleapi/transport
@@ -121,7 +129,7 @@ imports:
   - support/bundler
   - transport
 - name: google.golang.org/appengine
-  version: b79c28f0197795b4050bfcd7c4c2209136c594b1
+  version: 170382fa85b10b94728989dfcf6cc818b335c952
   subpackages:
   - aetest
   - blobstore
@@ -147,10 +155,12 @@ imports:
   - urlfetch
   - user
 - name: google.golang.org/genproto
-  version: 1e95789587db7d93ebbaa5eb65da17d3dbf8ab64
+  version: 411e09b969b1170a9f0c467558eb4c4c110d9c77
   subpackages:
   - googleapis/api/annotations
+  - googleapis/api/distribution
   - googleapis/api/label
+  - googleapis/api/metric
   - googleapis/api/monitoredres
   - googleapis/datastore/v1
   - googleapis/iam/v1
@@ -159,8 +169,9 @@ imports:
   - googleapis/pubsub/v1
   - googleapis/rpc/status
   - googleapis/type/latlng
+  - protobuf/field_mask
 - name: google.golang.org/grpc
-  version: d50cf2db166eaff3f2429425758d12205085eb5b
+  version: ff17eeb5f6e2112ef30f103d686fa725ee31202e
   subpackages:
   - codes
   - credentials
@@ -172,6 +183,7 @@ imports:
   - naming
   - peer
   - stats
+  - status
   - tap
   - transport
 testImports: []

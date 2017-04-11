@@ -7,7 +7,6 @@ import (
 	"cloud.google.com/go/pubsub"
 
 	"golang.org/x/net/context"
-	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -54,7 +53,7 @@ type CloudPubSub interface {
 	DeleteTopic(Topic) error
 	Publish(Topic, *pubsub.Message) error
 	PushSubscription(Topic, time.Duration, *pubsub.PushConfig) error
-	PullSubscription(Topic, ...pubsub.PullOption) ([]*pubsub.Message, error)
+	ReceiveSubscription(Topic, func(context.Context, *pubsub.Message)) error
 }
 
 // cloudPubSubClient is cloud pubsub client
@@ -159,41 +158,28 @@ func (c *cloudPubSubClient) PushSubscription(topic Topic, deadline time.Duration
 	return nil
 }
 
-func (c *cloudPubSubClient) PullSubscription(topic Topic, opt ...pubsub.PullOption) ([]*pubsub.Message, error) {
+func (c *cloudPubSubClient) ReceiveSubscription(topic Topic, f func(context.Context, *pubsub.Message)) error {
 	_, err := c.existsTopic(topic)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	id := RandSeq(32)
 	sub, err := c.existsSubscription(id)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if sub != nil {
-		return nil, fmt.Errorf("subscription %s is already created", id)
+		return fmt.Errorf("subscription %s is already created", id)
 	}
 
-	itr, err := sub.Pull(c.ctx, opt...)
+	err = sub.Receive(c.ctx, f)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var messages []*pubsub.Message
-
-	for {
-		msg, err := itr.Next()
-		if err == iterator.Done {
-			break
-		} else if err != nil {
-			return nil, err
-		}
-		msg.Done(true)
-		messages = append(messages, msg)
-	}
-
-	return messages, nil
+	return nil
 }
 
 func (c *cloudPubSubClient) existsSubscription(id string) (*pubsub.Subscription, error) {
