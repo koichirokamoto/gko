@@ -9,9 +9,9 @@ import (
 	sendgrid "github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"golang.org/x/net/context"
-	"google.golang.org/appengine"
+	"golang.org/x/oauth2"
+	gmail "google.golang.org/api/gmail/v1"
 	gaemail "google.golang.org/appengine/mail"
-	"google.golang.org/appengine/urlfetch"
 )
 
 var (
@@ -22,27 +22,48 @@ var (
 var (
 	_ MailFactory = (*sendGridMailFactoryImpl)(nil)
 	_ MailFactory = (*gaeMailFactoryImpl)(nil)
+
+	_ Mail = (*sendGridMailClient)(nil)
+	_ Mail = (*gaeMailClient)(nil)
+	_ Mail = (*gmailClient)(nil)
 )
 
-var (
-	sendgridMailFactory MailFactory
-	gaeMailFactory      MailFactory
-)
+var mailFactory MailFactory
 
 // GetSendGridMailFactory return sendgrid mail factory.
-func GetSendGridMailFactory() MailFactory {
-	if sendgridMailFactory == nil {
-		sendgridMailFactory = &sendGridMailFactoryImpl{}
+func GetSendGridMailFactory(client *http.Client) MailFactory {
+	if mailFactory == nil {
+		mailFactory = &sendGridMailFactoryImpl{client}
 	}
-	return sendgridMailFactory
+	_, ok := mailFactory.(*sendGridMailFactoryImpl)
+	if !ok {
+		mailFactory = &sendGridMailFactoryImpl{client}
+	}
+	return mailFactory
 }
 
 // GetGAEMailFactory return gae mail factory.
 func GetGAEMailFactory() MailFactory {
-	if gaeMailFactory == nil {
-
+	if mailFactory == nil {
+		mailFactory = &gaeMailFactoryImpl{}
 	}
-	return gaeMailFactory
+	_, ok := mailFactory.(*gaeMailFactoryImpl)
+	if !ok {
+		mailFactory = &gaeMailFactoryImpl{}
+	}
+	return mailFactory
+}
+
+// GetGmailFactory return gmail factory.
+func GetGmailFactory(conf *oauth2.Config) MailFactory {
+	if mailFactory == nil {
+		mailFactory = &gmailFactoryImpl{conf}
+	}
+	_, ok := mailFactory.(*gmailFactoryImpl)
+	if !ok {
+		mailFactory = &gmailFactoryImpl{conf}
+	}
+	return mailFactory
 }
 
 // MailFactory is mail factory interface.
@@ -56,21 +77,24 @@ type Mail interface {
 }
 
 // sendGridMailFactoryImpl implements mail factory interface.
-type sendGridMailFactoryImpl struct{}
+type sendGridMailFactoryImpl struct {
+	client *http.Client
+}
 
 // New return new send grid mail.
 func (s *sendGridMailFactoryImpl) New(ctx context.Context, key string) Mail {
-	return newSendGridMail(ctx, key)
+	return newSendGridMail(ctx, s.client, key)
 }
 
 // sendGridMailClient is mail client of sendgrid interface.
 type sendGridMailClient struct {
-	ctx context.Context
-	key string
+	ctx    context.Context
+	client *http.Client
+	key    string
 }
 
-func newSendGridMail(ctx context.Context, key string) Mail {
-	return &sendGridMailClient{ctx, key}
+func newSendGridMail(ctx context.Context, client *http.Client, key string) Mail {
+	return &sendGridMailClient{ctx, client, key}
 }
 
 // Send send email using sendgrid.
@@ -83,7 +107,7 @@ func (s *sendGridMailClient) Send(from, subject, content, contentType string, to
 	if err != nil {
 		return err
 	}
-	res, err := urlfetch.Client(s.ctx).Do(httpreq)
+	res, err := s.client.Do(httpreq)
 	if err != nil {
 		return err
 	} else if 400 <= res.StatusCode {
@@ -122,9 +146,6 @@ type gaeMailClient struct {
 }
 
 func newGAEMailClient(ctx context.Context, appID string) *gaeMailClient {
-	if appID == "" {
-		appID = appengine.AppID(ctx)
-	}
 	return &gaeMailClient{ctx, appID}
 }
 
@@ -140,4 +161,37 @@ func (g *gaeMailClient) Send(from, subject, content, contentType string, to []st
 		msg.Body = content
 	}
 	return gaemail.Send(g.ctx, msg)
+}
+
+type gmailFactoryImpl struct {
+	conf *oauth2.Config
+}
+
+func (g *gmailFactoryImpl) New(ctx context.Context, refreshToken string) Mail {
+	srv, err := NewGmailService(ctx, g.conf, refreshToken)
+	if err != nil {
+		return nil
+	}
+	return &gmailClient{srv}
+}
+
+type gmailClient struct {
+	srv *gmail.Service
+}
+
+func (g *gmailClient) Send(from, subject, content, contentType string, to []string) error {
+	var headers []*gmail.MessagePartHeader
+	part := &gmail.MessagePartBody{}
+	body := &gmail.MessagePart{
+		Headers:  headers,
+		Body:     part,
+		MimeType: contentType,
+	}
+	msg := &gmail.Message{
+		Id:      RandSeq(32),
+		Payload: body,
+		Raw:     "",
+	}
+	g.srv.Users.Messages.Send(from, msg).Do()
+	return nil
 }
