@@ -20,10 +20,6 @@ func GetBigQueryFactory() BigQueryFactory {
 	if bigqueryFactory == nil {
 		bigqueryFactory = &bigQueryFactoryImpl{}
 	}
-	_, ok := bigqueryFactory.(*bigQueryFactoryImpl)
-	if !ok {
-		bigqueryFactory = &bigQueryFactoryImpl{}
-	}
 	return bigqueryFactory
 }
 

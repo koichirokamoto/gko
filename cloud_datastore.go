@@ -19,10 +19,6 @@ func GetCloudDatastoreFactory() CloudDatastoreFactory {
 	if cloudDatastoreFactory == nil {
 		cloudDatastoreFactory = &cloudDatastoreFactoryImpl{}
 	}
-	_, ok := cloudDatastoreFactory.(*cloudDatastoreFactoryImpl)
-	if !ok {
-		cloudDatastoreFactory = &cloudDatastoreFactoryImpl{}
-	}
 	return cloudDatastoreFactory
 }
 
