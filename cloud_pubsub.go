@@ -1,6 +1,7 @@
 package gko
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -16,6 +17,8 @@ var (
 )
 
 var cloudPubSubFactory CloudPubSubFactory
+
+var errResourceNotFound = errors.New("resource is not found")
 
 // GetCloudPubSubFactory return cloud pub/sub factory.
 func GetCloudPubSubFactory() CloudPubSubFactory {
@@ -53,7 +56,7 @@ type CloudPubSub interface {
 	DeleteTopic(Topic) error
 	Publish(Topic, *pubsub.Message) error
 	PushSubscription(Topic, time.Duration, *pubsub.PushConfig) error
-	ReceiveSubscription(Topic, func(context.Context, *pubsub.Message)) error
+	PullSubscription(Topic, time.Duration, func(context.Context, *pubsub.Message)) error
 }
 
 // cloudPubSubClient is cloud pubsub client
@@ -79,13 +82,10 @@ func newCloudPubSubClient(ctx context.Context) (*cloudPubSubClient, error) {
 
 // CreateTopic create cloud pubsub topic.
 func (c *cloudPubSubClient) CreateTopic(topic Topic) error {
-	t, err := c.existsTopic(topic)
-	if err != nil {
+	t := c.client.Topic(string(topic))
+	err := c.existsTopic(t)
+	if err == nil || (err != nil && err != errResourceNotFound) {
 		return err
-	}
-
-	if t != nil {
-		return fmt.Errorf("topic %s is already created", topic)
 	}
 
 	_, err = c.client.CreateTopic(c.ctx, string(topic))
@@ -97,23 +97,23 @@ func (c *cloudPubSubClient) CreateTopic(topic Topic) error {
 }
 
 // existsTopic check cloud pubsub topic is created.
-func (c *cloudPubSubClient) existsTopic(topic Topic) (*pubsub.Topic, error) {
-	t := c.client.Topic(string(topic))
-	exists, err := t.Exists(c.ctx)
+func (c *cloudPubSubClient) existsTopic(topic *pubsub.Topic) error {
+	exists, err := topic.Exists(c.ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if !exists {
-		return nil, fmt.Errorf("topic %s is not found", topic)
+		return errResourceNotFound
 	}
 
-	return t, nil
+	return nil
 }
 
 // DeleteTopic delete cloud pubsub topic.
 func (c *cloudPubSubClient) DeleteTopic(topic Topic) error {
-	if _, err := c.existsTopic(topic); err != nil {
+	t := c.client.Topic(string(topic))
+	if err := c.existsTopic(t); err != nil {
 		return err
 	}
 
@@ -139,15 +139,17 @@ func (c *cloudPubSubClient) PushSubscription(topic Topic, deadline time.Duration
 		return fmt.Errorf("subscription push config must not be null")
 	}
 
-	t, err := c.existsTopic(topic)
+	t := c.client.Topic(string(topic))
+	err := c.existsTopic(t)
 	if err != nil {
 		return err
 	}
 
 	id := RandSeq(32)
-	sub, err := c.existsSubscription(id)
-	if sub != nil {
-		return fmt.Errorf("subscription %s is already created", id)
+	sub := c.client.Subscription(id)
+	err = c.existsSubscription(sub)
+	if err == nil || (err != nil && err != errResourceNotFound) {
+		return err
 	}
 
 	_, err = c.client.CreateSubscription(c.ctx, id, t, deadline, pushConfig)
@@ -158,20 +160,23 @@ func (c *cloudPubSubClient) PushSubscription(topic Topic, deadline time.Duration
 	return nil
 }
 
-func (c *cloudPubSubClient) ReceiveSubscription(topic Topic, f func(context.Context, *pubsub.Message)) error {
-	_, err := c.existsTopic(topic)
+func (c *cloudPubSubClient) PullSubscription(topic Topic, deadline time.Duration, f func(context.Context, *pubsub.Message)) error {
+	t := c.client.Topic(string(topic))
+	err := c.existsTopic(t)
 	if err != nil {
 		return err
 	}
 
 	id := RandSeq(32)
-	sub, err := c.existsSubscription(id)
-	if err != nil {
+	sub := c.client.Subscription(id)
+	err = c.existsSubscription(sub)
+	if err == nil || (err != nil && err != errResourceNotFound) {
 		return err
 	}
 
-	if sub != nil {
-		return fmt.Errorf("subscription %s is already created", id)
+	sub, err = c.client.CreateSubscription(c.ctx, id, t, deadline, nil)
+	if err != nil {
+		return err
 	}
 
 	err = sub.Receive(c.ctx, f)
@@ -182,16 +187,15 @@ func (c *cloudPubSubClient) ReceiveSubscription(topic Topic, f func(context.Cont
 	return nil
 }
 
-func (c *cloudPubSubClient) existsSubscription(id string) (*pubsub.Subscription, error) {
-	sub := c.client.Subscription(id)
+func (c *cloudPubSubClient) existsSubscription(sub *pubsub.Subscription) error {
 	exists, err := sub.Exists(c.ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if !exists {
-		return nil, fmt.Errorf("subscription %s is not found", id)
+		return errResourceNotFound
 	}
 
-	return sub, nil
+	return nil
 }
