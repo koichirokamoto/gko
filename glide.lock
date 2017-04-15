@@ -1,5 +1,5 @@
-hash: 59af35b6443e72c152c6b33201d61350e2c7feb28d91297f687d1f7a4577d6d2
-updated: 2017-04-11T11:56:48.176941646+09:00
+hash: 4d5d9c7dc4fe9fb6d57d5d69fd8a16155dc0b850f2a3064d2558256c1abf962d
+updated: 2017-04-15T20:28:25.833181379+09:00
 imports:
 - name: cloud.google.com/go
   version: 1180f1d0d05f61a65f39b3b9be37815493758d2f
@@ -52,10 +52,6 @@ imports:
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
-- name: github.com/RobotsAndPencils/buford
-  version: d6d71aff1447ced56016d09a5d74f4ea488a2d75
-  subpackages:
-  - certificate
 - name: github.com/satori/go.uuid
   version: 5bf94b69c6b68ee1b541973bb8e1144db23a194b
 - name: github.com/sendgrid/rest
@@ -71,11 +67,6 @@ imports:
   subpackages:
   - assert
   - mock
-- name: golang.org/x/crypto
-  version: 9ef620b9ca2f82b55030ffd4f41327fa9e77a92c
-  subpackages:
-  - pkcs12
-  - pkcs12/internal/rc2
 - name: golang.org/x/net
   version: d1e1b351919c6738fdeb9893d5c998b161464f0c
   subpackages:

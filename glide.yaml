@@ -40,8 +40,5 @@ import:
   - taskqueue
   - urlfetch
   - aetest
-- package: github.com/RobotsAndPencils/buford
-  subpackages:
-  - certificate
 - package: github.com/koichirokamoto/apns
 - package: github.com/satori/go.uuid

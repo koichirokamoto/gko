@@ -8,7 +8,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/RobotsAndPencils/buford/certificate"
 	"github.com/koichirokamoto/apns"
 	"github.com/koichirokamoto/webpush"
 	"golang.org/x/net/context"
@@ -20,6 +19,13 @@ import (
 const (
 	fcmURL = "https://fcm.googleapis.com/fcm/send"
 	gcmURL = "https://android.googleapis.com/gcm/send"
+)
+
+var (
+	// ServerKey is fcm server key.
+	ServerKey string
+	// ApnsCert is apns notification certificate.
+	ApnsCert tls.Certificate
 )
 
 type worker interface {
@@ -46,11 +52,11 @@ type FcmSubscription struct {
 }
 
 // SendFcmNotification push fcm notification to user.
-func SendFcmNotification(ctx context.Context, serverKey string, subs []*FcmSubscription, payload []byte) {
+func SendFcmNotification(ctx context.Context, subs []*FcmSubscription, payload []byte) {
 	in := make(chan worker)
 	go func() {
 		for _, sub := range subs {
-			in <- &fcmWorker{ctx, sub, payload, serverKey}
+			in <- &fcmWorker{ctx, sub, payload}
 		}
 		close(in)
 	}()
@@ -59,10 +65,9 @@ func SendFcmNotification(ctx context.Context, serverKey string, subs []*FcmSubsc
 }
 
 type fcmWorker struct {
-	ctx       context.Context
-	sub       *FcmSubscription
-	payload   []byte
-	serverKey string
+	ctx     context.Context
+	sub     *FcmSubscription
+	payload []byte
 }
 
 func (f *fcmWorker) work() error {
@@ -77,7 +82,7 @@ func (f *fcmWorker) work() error {
 		return err
 	}
 	defer req.Body.Close()
-	req.Header.Set("Authorization", "key="+f.serverKey)
+	req.Header.Set("Authorization", "key="+ServerKey)
 	req.Header.Set("Encryption", "salt="+base64.URLEncoding.EncodeToString(encryption.Salt))
 	req.Header.Set("Crypto-Key", "dh="+base64.URLEncoding.EncodeToString(encryption.PublickKey))
 	req.Header.Set("Content-Encoding", "aesgcm")
@@ -92,23 +97,21 @@ func (f *fcmWorker) work() error {
 
 const apnsGateway = "gateway.push.apple.com:2195"
 
-// ApnsConfig is apns notification setting.
-type ApnsConfig struct {
-	Filename string
-	Password string
-	Host     string
-}
-
 // SendApnsNotification send apns2 notification.
-func SendApnsNotification(ctx context.Context, deviceTokens []string, config *ApnsConfig, notification *apns.PushNotification) {
+func SendApnsNotification(ctx context.Context, deviceTokens []string, notification *apns.PushNotification) {
 	in := make(chan worker)
+
+	tlsconfig := &tls.Config{
+		Certificates: []tls.Certificate{ApnsCert},
+		ServerName:   strings.Split(apnsGateway, ":")[0],
+	}
 	go func() {
 		for _, d := range deviceTokens {
 			payload, err := notification.ToBytes(d)
 			if err != nil {
 				continue
 			}
-			in <- &apnsWorker{ctx, config, payload}
+			in <- &apnsWorker{ctx, tlsconfig, payload}
 		}
 		close(in)
 	}()
@@ -117,28 +120,18 @@ func SendApnsNotification(ctx context.Context, deviceTokens []string, config *Ap
 }
 
 type apnsWorker struct {
-	ctx     context.Context
-	config  *ApnsConfig
-	payload []byte
+	ctx       context.Context
+	tlsconfig *tls.Config
+	payload   []byte
 }
 
 func (a *apnsWorker) work() error {
-	cert, err := certificate.Load(a.config.Filename, a.config.Password)
-	if err != nil {
-		return err
-	}
-
-	tlsconfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		ServerName:   strings.Split(apnsGateway, ":")[0],
-	}
-
 	conn, err := socket.Dial(a.ctx, "tcp", apnsGateway)
 	if err != nil {
 		return err
 	}
 
-	tlsconn := tls.Client(conn, tlsconfig)
+	tlsconn := tls.Client(conn, a.tlsconfig)
 	if err := tlsconn.Handshake(); err != nil {
 		return err
 	}
