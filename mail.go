@@ -22,48 +22,41 @@ var (
 var (
 	_ MailFactory = (*sendGridMailFactoryImpl)(nil)
 	_ MailFactory = (*gaeMailFactoryImpl)(nil)
+	_ MailFactory = (*gmailFactoryImpl)(nil)
 
 	_ Mail = (*sendGridMailClient)(nil)
 	_ Mail = (*gaeMailClient)(nil)
 	_ Mail = (*gmailClient)(nil)
 )
 
-var mailFactory MailFactory
+var (
+	sendgridmailFactory MailFactory
+	gaemailFactory      MailFactory
+	gmailFactory        MailFactory
+)
 
 // GetSendGridMailFactory return sendgrid mail factory.
 func GetSendGridMailFactory(client *http.Client) MailFactory {
-	if mailFactory == nil {
-		mailFactory = &sendGridMailFactoryImpl{client}
+	if sendgridmailFactory == nil {
+		sendgridmailFactory = &sendGridMailFactoryImpl{client}
 	}
-	_, ok := mailFactory.(*sendGridMailFactoryImpl)
-	if !ok {
-		mailFactory = &sendGridMailFactoryImpl{client}
-	}
-	return mailFactory
+	return sendgridmailFactory
 }
 
 // GetGAEMailFactory return gae mail factory.
 func GetGAEMailFactory() MailFactory {
-	if mailFactory == nil {
-		mailFactory = &gaeMailFactoryImpl{}
+	if gaemailFactory == nil {
+		gaemailFactory = &gaeMailFactoryImpl{}
 	}
-	_, ok := mailFactory.(*gaeMailFactoryImpl)
-	if !ok {
-		mailFactory = &gaeMailFactoryImpl{}
-	}
-	return mailFactory
+	return gaemailFactory
 }
 
 // GetGmailFactory return gmail factory.
 func GetGmailFactory(conf *oauth2.Config) MailFactory {
-	if mailFactory == nil {
-		mailFactory = &gmailFactoryImpl{conf}
+	if gmailFactory == nil {
+		gmailFactory = &gmailFactoryImpl{conf}
 	}
-	_, ok := mailFactory.(*gmailFactoryImpl)
-	if !ok {
-		mailFactory = &gmailFactoryImpl{conf}
-	}
-	return mailFactory
+	return gmailFactory
 }
 
 // MailFactory is mail factory interface.
