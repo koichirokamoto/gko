@@ -57,8 +57,8 @@ func ProcessRecursively(dir string, f func(d string) error) error {
 	return nil
 }
 
-// SliceRetrivedDuplicate returns new slice retrived duplicate data from slice.
-func SliceRetrivedDuplicate(slice []string) []string {
+// RetrivedDuplicateFromSlice returns new slice retrived duplicate data from slice.
+func RetrivedDuplicateFromSlice(slice []string) []string {
 	m := make(map[string]bool)
 	newSlice := make([]string, 0, len(slice))
 	for _, s := range slice {
