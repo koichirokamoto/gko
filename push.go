@@ -2,12 +2,10 @@ package gko
 
 import (
 	"bytes"
-
 	"crypto/tls"
 	"encoding/base64"
 	"net/http"
 	"strings"
-
 	"sync"
 
 	"github.com/RobotsAndPencils/buford/certificate"
@@ -18,8 +16,6 @@ import (
 	"google.golang.org/appengine/socket"
 	"google.golang.org/appengine/urlfetch"
 )
-
-var pushEb = gensupport.DefaultBackoffStrategy()
 
 const (
 	fcmURL = "https://fcm.googleapis.com/fcm/send"
@@ -36,7 +32,7 @@ func runWorker(wrk <-chan worker) {
 		wg.Add(1)
 		go func(w worker) {
 			defer wg.Done()
-			Retry(w.work, pushEb)
+			Retry(w.work, gensupport.DefaultBackoffStrategy())
 		}(w)
 	}
 	wg.Wait()
