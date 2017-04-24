@@ -14,9 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"golang.org/x/net/context"
-	"google.golang.org/appengine/urlfetch"
 )
 
 const api = "https://api.twitter.com"
@@ -37,13 +34,13 @@ type TwitterClient struct {
 }
 
 // NewTwitterClient returns new twitter authentication.
-func NewTwitterClient(c context.Context, consumerKey, consumerSecret, oauthToken, oauthTokenSecret string) *TwitterClient {
+func NewTwitterClient(client *http.Client, consumerKey, consumerSecret, oauthToken, oauthTokenSecret string) *TwitterClient {
 	return &TwitterClient{
 		consumerKey:      consumerKey,
 		consumerSecret:   consumerSecret,
 		oauthToken:       oauthToken,
 		oauthTokenSecret: oauthTokenSecret,
-		client:           urlfetch.Client(c),
+		client:           client,
 	}
 }
 

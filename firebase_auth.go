@@ -10,16 +10,14 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/urlfetch"
 )
 
 // FirebaseAuthUserID return firebase auth user id.
-func FirebaseAuthUserID(r *http.Request, id string) (uid string, err error) {
+func FirebaseAuthUserID(c *http.Client, r *http.Request, id string) (uid string, err error) {
 	keyLists := "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
 	url := "https://securetoken.google.com/"
 	token, err := request.ParseFromRequestWithClaims(r, request.ArgumentExtractor{"token"}, jwt.StandardClaims{}, func(t *jwt.Token) (interface{}, error) {
-		res, err := urlfetch.Client(appengine.NewContext(r)).Get(keyLists)
+		res, err := c.Get(keyLists)
 		if err != nil {
 			return nil, err
 		}

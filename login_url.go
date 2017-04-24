@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"golang.org/x/net/context"
+	"net/http"
+
 	"golang.org/x/oauth2"
 )
 
@@ -20,7 +21,7 @@ func GoogleLoginURL(state, clientID, clientSecret, redirectURL string, opts ...o
 }
 
 // TwitterLoginURL return twitter login url.
-func TwitterLoginURL(c context.Context, consumerKey, consumerSecret, oauthToken, oauthTokenSecret, callback string) (string, error) {
+func TwitterLoginURL(c *http.Client, consumerKey, consumerSecret, oauthToken, oauthTokenSecret, callback string) (string, error) {
 	twitter := NewTwitterClient(c, consumerKey, consumerSecret, oauthToken, oauthTokenSecret)
 
 	params := url.Values{}
