@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,7 +17,10 @@ import (
 	"time"
 )
 
-const api = "https://api.twitter.com"
+const (
+	api            = "https://api.twitter.com"
+	twitterAuthAPI = "https://api.twitter.com/oauth/authenticate?oauth_token=%s"
+)
 
 // TwitterToken is twitter token.
 type TwitterToken struct {
@@ -42,6 +46,18 @@ func NewTwitterClient(client *http.Client, consumerKey, consumerSecret, oauthTok
 		oauthTokenSecret: oauthTokenSecret,
 		client:           client,
 	}
+}
+
+// LoginURL create twitter login url.
+func (t *TwitterClient) LoginURL(callbackURL string) (string, error) {
+	params := url.Values{}
+	params.Set("oauth_callback", callbackURL)
+	token, err := t.RequestToken(params)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf(twitterAuthAPI, token.oauthToken), nil
 }
 
 // RequestToken requests token to twitter authentication.
