@@ -20,9 +20,9 @@ var (
 )
 
 var (
-	_ MailFactory = (*sendGridMailFactoryImpl)(nil)
-	_ MailFactory = (*gaeMailFactoryImpl)(nil)
-	_ MailFactory = (*gmailFactoryImpl)(nil)
+	_ SendGridClientFactory = (*sendGridMailFactoryImpl)(nil)
+	_ GAEMailClientFactory  = (*gaeMailFactoryImpl)(nil)
+	_ GmailClientFactory    = (*gmailFactoryImpl)(nil)
 
 	_ Mail = (*sendGridMailClient)(nil)
 	_ Mail = (*gaeMailClient)(nil)
@@ -30,38 +30,22 @@ var (
 )
 
 var (
-	sendgridmailFactory MailFactory
-	gaemailFactory      MailFactory
-	gmailFactory        MailFactory
+	sendgridmailFactory SendGridClientFactory
+	gaemailFactory      GAEMailClientFactory
+	gmailFactory        GmailClientFactory
 )
 
 // GetSendGridMailFactory return sendgrid mail factory.
-func GetSendGridMailFactory(client *http.Client) MailFactory {
+func GetSendGridMailFactory() SendGridClientFactory {
 	if sendgridmailFactory == nil {
-		sendgridmailFactory = &sendGridMailFactoryImpl{client}
+		sendgridmailFactory = &sendGridMailFactoryImpl{}
 	}
 	return sendgridmailFactory
 }
 
-// GetGAEMailFactory return gae mail factory.
-func GetGAEMailFactory() MailFactory {
-	if gaemailFactory == nil {
-		gaemailFactory = &gaeMailFactoryImpl{}
-	}
-	return gaemailFactory
-}
-
-// GetGmailFactory return gmail factory.
-func GetGmailFactory(conf *oauth2.Config) MailFactory {
-	if gmailFactory == nil {
-		gmailFactory = &gmailFactoryImpl{conf}
-	}
-	return gmailFactory
-}
-
-// MailFactory is mail factory interface.
-type MailFactory interface {
-	New(context.Context, string) Mail
+// SendGridClientFactory is sendgrid client factory interface.
+type SendGridClientFactory interface {
+	New(*http.Client, string) Mail
 }
 
 // Mail is mail interface.
@@ -70,24 +54,21 @@ type Mail interface {
 }
 
 // sendGridMailFactoryImpl implements mail factory interface.
-type sendGridMailFactoryImpl struct {
-	client *http.Client
-}
+type sendGridMailFactoryImpl struct{}
 
 // New return new send grid mail.
-func (s *sendGridMailFactoryImpl) New(ctx context.Context, key string) Mail {
-	return newSendGridMail(ctx, s.client, key)
+func (s *sendGridMailFactoryImpl) New(client *http.Client, key string) Mail {
+	return newSendGridMail(client, key)
 }
 
 // sendGridMailClient is mail client of sendgrid interface.
 type sendGridMailClient struct {
-	ctx    context.Context
 	client *http.Client
 	key    string
 }
 
-func newSendGridMail(ctx context.Context, client *http.Client, key string) Mail {
-	return &sendGridMailClient{ctx, client, key}
+func newSendGridMail(client *http.Client, key string) Mail {
+	return &sendGridMailClient{client, key}
 }
 
 // Send send email using sendgrid.
@@ -127,19 +108,31 @@ func (s *sendGridMailClient) buildSendGridMail(from, subject, content, contentTy
 	return sg
 }
 
+// GAEMailClientFactory is gae mail client factory interface.
+type GAEMailClientFactory interface {
+	New(context.Context) Mail
+}
+
+// GetGAEMailFactory return gae mail factory.
+func GetGAEMailFactory() GAEMailClientFactory {
+	if gaemailFactory == nil {
+		gaemailFactory = &gaeMailFactoryImpl{}
+	}
+	return gaemailFactory
+}
+
 type gaeMailFactoryImpl struct{}
 
-func (g *gaeMailFactoryImpl) New(ctx context.Context, appID string) Mail {
-	return newGAEMailClient(ctx, appID)
+func (g *gaeMailFactoryImpl) New(ctx context.Context) Mail {
+	return newGAEMailClient(ctx)
 }
 
 type gaeMailClient struct {
-	ctx   context.Context
-	appID string
+	ctx context.Context
 }
 
-func newGAEMailClient(ctx context.Context, appID string) *gaeMailClient {
-	return &gaeMailClient{ctx, appID}
+func newGAEMailClient(ctx context.Context) *gaeMailClient {
+	return &gaeMailClient{ctx}
 }
 
 func (g *gaeMailClient) Send(from, subject, content, contentType string, to []string) error {
@@ -156,12 +149,23 @@ func (g *gaeMailClient) Send(from, subject, content, contentType string, to []st
 	return gaemail.Send(g.ctx, msg)
 }
 
-type gmailFactoryImpl struct {
-	conf *oauth2.Config
+// GmailClientFactory is gmail client factory interface.
+type GmailClientFactory interface {
+	New(context.Context, *oauth2.Config, string) Mail
 }
 
-func (g *gmailFactoryImpl) New(ctx context.Context, refreshToken string) Mail {
-	srv, err := NewGmailService(ctx, g.conf, refreshToken)
+// GetGmailFactory return gmail factory.
+func GetGmailFactory() GmailClientFactory {
+	if gmailFactory == nil {
+		gmailFactory = &gmailFactoryImpl{}
+	}
+	return gmailFactory
+}
+
+type gmailFactoryImpl struct{}
+
+func (g *gmailFactoryImpl) New(ctx context.Context, conf *oauth2.Config, refreshToken string) Mail {
+	srv, err := NewGmailService(ctx, conf, refreshToken)
 	if err != nil {
 		return nil
 	}
