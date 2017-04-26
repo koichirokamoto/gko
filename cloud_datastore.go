@@ -37,7 +37,10 @@ func (b *cloudDatastoreFactoryImpl) New(ctx context.Context) (CloudDatastore, er
 
 // CloudDatastore is cloudDatastore interface along with reader and writer.
 type CloudDatastore interface {
+	Get(*datastore.Key, interface{}) error
+	GetMulti([]*datastore.Key, interface{}) error
 	GetAll(*datastore.Query, interface{}) ([]*datastore.Key, error)
+	Count(*datastore.Query) (int, error)
 }
 
 // cloudDatastoreClient is cloud datastore client
@@ -73,4 +76,9 @@ func (c *cloudDatastoreClient) GetMulti(keys []*datastore.Key, dst interface{}) 
 // GetAll get all entities from cloud datastore.
 func (c *cloudDatastoreClient) GetAll(q *datastore.Query, dst interface{}) ([]*datastore.Key, error) {
 	return c.client.GetAll(c.ctx, q, dst)
+}
+
+// Count get datastore entity count from datastore query of q.
+func (c *cloudDatastoreClient) Count(q *datastore.Query) (int, error) {
+	return c.client.Count(c.ctx, q)
 }
