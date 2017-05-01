@@ -7,6 +7,7 @@ import:
   - logging
   - datastore
   - pubsub
+  - logging/logadmin
 - package: github.com/golang/protobuf
 - package: github.com/koichirokamoto/webpush
 - package: github.com/mjibson/goon

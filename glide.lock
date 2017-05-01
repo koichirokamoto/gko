@@ -1,8 +1,8 @@
-hash: 4d5d9c7dc4fe9fb6d57d5d69fd8a16155dc0b850f2a3064d2558256c1abf962d
-updated: 2017-04-15T20:28:25.833181379+09:00
+hash: 81dc9e935d83a2ba8c45ffa045677a38dd3aafe95c757c138d45693b1e6a7ce2
+updated: 2017-05-01T15:39:43.556731324+09:00
 imports:
 - name: cloud.google.com/go
-  version: 1180f1d0d05f61a65f39b3b9be37815493758d2f
+  version: 3536fc15a6517d90ba50b7ca76ddcb404e8ff1f3
   subpackages:
   - bigquery
   - civil
@@ -17,11 +17,12 @@ imports:
   - logging
   - logging/apiv2
   - logging/internal
+  - logging/logadmin
   - pubsub
   - pubsub/apiv1
   - storage
 - name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  version: 2df174808ee097f90d259e432cc04442cf60be21
   subpackages:
   - spew
 - name: github.com/dgrijalva/jwt-go
@@ -63,12 +64,12 @@ imports:
 - name: github.com/stretchr/objx
   version: cbeaeb16a013161a98496fad62933b1d21786672
 - name: github.com/stretchr/testify
-  version: 4d4bfba8f1d1027c4fdbe371823030df51419987
+  version: f390dcf405f7b83c997eac1b06768bb9f44dec18
   subpackages:
   - assert
   - mock
 - name: golang.org/x/net
-  version: d1e1b351919c6738fdeb9893d5c998b161464f0c
+  version: da118f7b8e5954f39d0d2130ab35d4bf0e3cb344
   subpackages:
   - context
   - context/ctxhttp
@@ -79,18 +80,18 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/oauth2
-  version: 7fdf09982454086d5570c7db3e11f360194830ca
+  version: a6bd8cefa1811bd24b86f8902872e4e8225f74c4
   subpackages:
   - google
   - internal
   - jws
   - jwt
 - name: golang.org/x/sync
-  version: 5a06fca2c336a4b2b2fcb45702e8c47621b2aa2c
+  version: de49d9dcd27d4f764488181bea099dfe6179bcf0
   subpackages:
   - semaphore
 - name: golang.org/x/text
-  version: f4b4367115ec2de254587813edaa901bc1c723a8
+  version: a9a820217f98f7c8a207ec1e45a874e1fe12c478
   subpackages:
   - encoding
   - encoding/internal
@@ -101,7 +102,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/api
-  version: 48e49d1645e228d1c50c3d54fb476b2224477303
+  version: fbbaff1827317122a8a0e1b24de25df8417ce87b
   subpackages:
   - admin/directory/v1
   - bigquery/v2
@@ -162,11 +163,12 @@ imports:
   - googleapis/type/latlng
   - protobuf/field_mask
 - name: google.golang.org/grpc
-  version: ff17eeb5f6e2112ef30f103d686fa725ee31202e
+  version: c73e0165df8e5495c523feb93a8a6c19b9452817
   subpackages:
   - codes
   - credentials
   - credentials/oauth
+  - grpclb/grpc_lb_v1
   - grpclog
   - internal
   - keepalive

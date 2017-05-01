@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/logging"
+	"cloud.google.com/go/logging/logadmin"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 )
@@ -45,21 +46,31 @@ type CloudLogging interface {
 type cloudLoggingClient struct {
 	ctx    context.Context
 	client *logging.Client
+	admin  *logadmin.Client
 }
 
 // newCloudLogginClient return new cloud logging client.
+//
+// This is assumed that user has admin scope of cloud logging.
 func newCloudLogginClient(ctx context.Context) (*cloudLoggingClient, error) {
 	t, projectID, err := getDefaultTokenSource(ctx, logging.AdminScope)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := logging.NewClient(ctx, projectID, option.WithTokenSource(t))
+	ts := option.WithTokenSource(t)
+
+	client, err := logging.NewClient(ctx, projectID, ts)
 	if err != nil {
 		return nil, err
 	}
 
-	return &cloudLoggingClient{ctx, client}, nil
+	admin, err := logadmin.NewClient(ctx, projectID, ts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cloudLoggingClient{ctx, client, admin}, nil
 }
 
 // Send send payload to cloud logging.
@@ -72,4 +83,24 @@ func (c *cloudLoggingClient) Send(logID, severity string, opts []logging.LoggerO
 		Payload:   payload,
 	}
 	l.Log(e)
+}
+
+// Entries return entry iterator.
+//
+// Options is loggin payload filters, updated date order and max size.
+func (c *cloudLoggingClient) Entries(filters []string, newestFirst bool, maxSize int) *logadmin.EntryIterator {
+	var opts []logadmin.EntriesOption
+	for _, f := range filters {
+		opts = append(opts, logadmin.Filter(f))
+	}
+	if newestFirst {
+		opts = append(opts, logadmin.NewestFirst())
+	}
+
+	itr := c.admin.Entries(c.ctx, opts...)
+	if maxSize > 0 {
+		itr.PageInfo().MaxSize = maxSize
+	}
+
+	return itr
 }
