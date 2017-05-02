@@ -6,6 +6,7 @@ import (
 	"cloud.google.com/go/logging"
 	"cloud.google.com/go/logging/logadmin"
 	"golang.org/x/net/context"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -40,6 +41,7 @@ func (c *cloudLoggingFactoryImpl) New(ctx context.Context) (CloudLogging, error)
 // CloudLogging is cloud logging interface.
 type CloudLogging interface {
 	Send(logID, severity string, opts []logging.LoggerOption, payload interface{})
+	Entries(filters []string, newestFirst bool, maxSize int, pageToken string) ([]*logging.Entry, string, bool, error)
 }
 
 // cloudLoggingClient is cloud logging client.
@@ -88,7 +90,7 @@ func (c *cloudLoggingClient) Send(logID, severity string, opts []logging.LoggerO
 // Entries return entry iterator.
 //
 // Options is loggin payload filters, updated date order and max size.
-func (c *cloudLoggingClient) Entries(filters []string, newestFirst bool, maxSize int) *logadmin.EntryIterator {
+func (c *cloudLoggingClient) Entries(filters []string, newestFirst bool, maxSize int, pageToken string) ([]*logging.Entry, string, bool, error) {
 	var opts []logadmin.EntriesOption
 	for _, f := range filters {
 		opts = append(opts, logadmin.Filter(f))
@@ -102,5 +104,11 @@ func (c *cloudLoggingClient) Entries(filters []string, newestFirst bool, maxSize
 		itr.PageInfo().MaxSize = maxSize
 	}
 
-	return itr
+	var entries []*logging.Entry
+	pageToken, err := iterator.NewPager(itr, maxSize, pageToken).NextPage(&entries)
+	if err != nil {
+		return nil, "", false, err
+	}
+
+	return entries, pageToken, pageToken != "", nil
 }
