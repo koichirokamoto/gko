@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/pubsub"
 
 	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 )
 
@@ -20,14 +21,6 @@ var cloudPubSubFactory CloudPubSubFactory
 
 var errResourceNotFound = errors.New("resource is not found")
 
-// GetCloudPubSubFactory return cloud pub/sub factory.
-func GetCloudPubSubFactory() CloudPubSubFactory {
-	if cloudPubSubFactory == nil {
-		cloudPubSubFactory = &cloudPubSubFactoryImpl{}
-	}
-	return cloudPubSubFactory
-}
-
 // Topic is cloud pubsub topic.
 type Topic string
 
@@ -39,16 +32,11 @@ type SubscriptionConfig struct {
 
 // CloudPubSubFactory is cloud pub/sub factory interface.
 type CloudPubSubFactory interface {
-	New(context.Context) (CloudPubSub, error)
+	New(context.Context, string, oauth2.TokenSource) (CloudPubSub, error)
 }
 
 // cloudPubSubFactoryImpl implements cloud pub/sub factory interface.
 type cloudPubSubFactoryImpl struct{}
-
-// New return new cloud pub/sub client.
-func (c *cloudPubSubFactoryImpl) New(ctx context.Context) (CloudPubSub, error) {
-	return newCloudPubSubClient(ctx)
-}
 
 // CloudPubSub is cloud pub/sub interface.
 type CloudPubSub interface {
@@ -65,14 +53,23 @@ type cloudPubSubClient struct {
 	client *pubsub.Client
 }
 
-// newCloudPubSubClient return new cloud pubsub client.
-func newCloudPubSubClient(ctx context.Context) (*cloudPubSubClient, error) {
-	t, projectID, err := getDefaultTokenSource(ctx, pubsub.ScopePubSub)
-	if err != nil {
-		return nil, err
+// GetCloudPubSubFactory return cloud pub/sub factory.
+func GetCloudPubSubFactory() CloudPubSubFactory {
+	if cloudPubSubFactory == nil {
+		cloudPubSubFactory = &cloudPubSubFactoryImpl{}
 	}
+	return cloudPubSubFactory
+}
 
-	client, err := pubsub.NewClient(ctx, projectID, option.WithTokenSource(t))
+// New return new cloud pub/sub client.
+//
+// If ts is specified, replace default google token to specified token source.
+func (c *cloudPubSubFactoryImpl) New(ctx context.Context, projectID string, ts oauth2.TokenSource) (CloudPubSub, error) {
+	var opts []option.ClientOption
+	if ts != nil {
+		opts = append(opts, option.WithTokenSource(ts))
+	}
+	client, err := pubsub.NewClient(ctx, projectID, opts...)
 	if err != nil {
 		return nil, err
 	}

@@ -9,6 +9,7 @@ import (
 	"cloud.google.com/go/logging"
 	"cloud.google.com/go/logging/logadmin"
 	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -21,26 +22,13 @@ var (
 
 var cloudLoggingFactory CloudLoggingFactory
 
-// GetCloudLogginFactory return cloud logging factory.
-func GetCloudLogginFactory() CloudLoggingFactory {
-	if cloudLoggingFactory == nil {
-		cloudLoggingFactory = &cloudLoggingFactoryImpl{}
-	}
-	return cloudLoggingFactory
-}
-
 // CloudLoggingFactory is cloud logging factory interface.
 type CloudLoggingFactory interface {
-	New(context.Context) (CloudLogging, error)
+	New(context.Context, string, oauth2.TokenSource) (CloudLogging, error)
 }
 
 // cloudLoggingFactoryImpl implements cloud logging factory.
 type cloudLoggingFactoryImpl struct{}
-
-// New return new cloud logging client.
-func (c *cloudLoggingFactoryImpl) New(ctx context.Context) (CloudLogging, error) {
-	return newCloudLogginClient(ctx)
-}
 
 // CloudLogging is cloud logging interface.
 type CloudLogging interface {
@@ -57,23 +45,28 @@ type cloudLoggingClient struct {
 	admin  *logadmin.Client
 }
 
-// newCloudLogginClient return new cloud logging client.
+// GetCloudLogginFactory return cloud logging factory.
+func GetCloudLogginFactory() CloudLoggingFactory {
+	if cloudLoggingFactory == nil {
+		cloudLoggingFactory = &cloudLoggingFactoryImpl{}
+	}
+	return cloudLoggingFactory
+}
+
+// New return new cloud logging client.
 //
-// This is assumed that user has admin scope of cloud logging.
-func newCloudLogginClient(ctx context.Context) (*cloudLoggingClient, error) {
-	t, projectID, err := getDefaultTokenSource(ctx, logging.AdminScope)
+// If ts is specified, replace default google token to specified token source.
+func (c *cloudLoggingFactoryImpl) New(ctx context.Context, projectID string, ts oauth2.TokenSource) (CloudLogging, error) {
+	var opts []option.ClientOption
+	if ts != nil {
+		opts = append(opts, option.WithTokenSource(ts))
+	}
+	client, err := logging.NewClient(ctx, projectID, opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	ts := option.WithTokenSource(t)
-
-	client, err := logging.NewClient(ctx, projectID, ts)
-	if err != nil {
-		return nil, err
-	}
-
-	admin, err := logadmin.NewClient(ctx, projectID, ts)
+	admin, err := logadmin.NewClient(ctx, projectID, opts...)
 	if err != nil {
 		return nil, err
 	}

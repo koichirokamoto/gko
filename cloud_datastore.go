@@ -4,6 +4,7 @@ import (
 	"golang.org/x/net/context"
 
 	"cloud.google.com/go/datastore"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 )
 
@@ -14,26 +15,13 @@ var (
 
 var cloudDatastoreFactory CloudDatastoreFactory
 
-// GetCloudDatastoreFactory return cloudDatastore factory.
-func GetCloudDatastoreFactory() CloudDatastoreFactory {
-	if cloudDatastoreFactory == nil {
-		cloudDatastoreFactory = &cloudDatastoreFactoryImpl{}
-	}
-	return cloudDatastoreFactory
-}
-
 // CloudDatastoreFactory is cloudDatastore factory interface.
 type CloudDatastoreFactory interface {
-	New(context.Context) (CloudDatastore, error)
+	New(context.Context, string, oauth2.TokenSource) (CloudDatastore, error)
 }
 
 // gaeCloudDatastoreFactoryImpl is implementation of cloudDatastore factory.
 type cloudDatastoreFactoryImpl struct{}
-
-// New return cloudDatastore client.
-func (b *cloudDatastoreFactoryImpl) New(ctx context.Context) (CloudDatastore, error) {
-	return newCloudDatastoreClient(ctx)
-}
 
 // CloudDatastore is cloudDatastore interface along with reader and writer.
 type CloudDatastore interface {
@@ -49,13 +37,23 @@ type cloudDatastoreClient struct {
 	client *datastore.Client
 }
 
-func newCloudDatastoreClient(ctx context.Context) (*cloudDatastoreClient, error) {
-	t, projectID, err := getDefaultTokenSource(ctx, datastore.ScopeDatastore)
-	if err != nil {
-		return nil, err
+// GetCloudDatastoreFactory return cloudDatastore factory.
+func GetCloudDatastoreFactory() CloudDatastoreFactory {
+	if cloudDatastoreFactory == nil {
+		cloudDatastoreFactory = &cloudDatastoreFactoryImpl{}
 	}
+	return cloudDatastoreFactory
+}
 
-	client, err := datastore.NewClient(ctx, projectID, option.WithTokenSource(t))
+// New return cloudDatastore client.
+//
+// If ts is specified, replace default google token to specified token source.
+func (b *cloudDatastoreFactoryImpl) New(ctx context.Context, projectID string, ts oauth2.TokenSource) (CloudDatastore, error) {
+	var opts []option.ClientOption
+	if ts != nil {
+		opts = append(opts, option.WithTokenSource(ts))
+	}
+	client, err := datastore.NewClient(ctx, projectID, opts...)
 	if err != nil {
 		return nil, err
 	}

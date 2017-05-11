@@ -9,6 +9,7 @@ import (
 
 	"fmt"
 
+	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
@@ -25,26 +26,13 @@ var (
 
 var bigqueryFactory BigQueryFactory
 
-// GetBigQueryFactory return bigquery factory.
-func GetBigQueryFactory() BigQueryFactory {
-	if bigqueryFactory == nil {
-		bigqueryFactory = &bigQueryFactoryImpl{}
-	}
-	return bigqueryFactory
-}
-
 // BigQueryFactory is bigquery factory interface.
 type BigQueryFactory interface {
-	New(context.Context) (BigQuery, error)
+	New(context.Context, string, oauth2.TokenSource) (BigQuery, error)
 }
 
 // gaeBigQueryFactoryImpl is implementation of bigquery factory.
 type bigQueryFactoryImpl struct{}
-
-// New return bigquery client.
-func (b *bigQueryFactoryImpl) New(ctx context.Context) (BigQuery, error) {
-	return newBigQueryClient(ctx)
-}
 
 // BigQuery is bigquery interface along with reader and writer.
 type BigQuery interface {
@@ -71,14 +59,23 @@ type bigQueryClient struct {
 	client *bigquery.Client
 }
 
-// newBigQueryClient return new bigquery client.
-func newBigQueryClient(ctx context.Context) (*bigQueryClient, error) {
-	t, projectID, err := getDefaultTokenSource(ctx, bigquery.Scope)
-	if err != nil {
-		return nil, err
+// GetBigQueryFactory return bigquery factory.
+func GetBigQueryFactory() BigQueryFactory {
+	if bigqueryFactory == nil {
+		bigqueryFactory = &bigQueryFactoryImpl{}
 	}
+	return bigqueryFactory
+}
 
-	client, err := bigquery.NewClient(ctx, projectID, option.WithTokenSource(t))
+// New return bigquery client.
+//
+// If ts is specified, replace default google token to specified token source.
+func (b *bigQueryFactoryImpl) New(ctx context.Context, projectID string, ts oauth2.TokenSource) (BigQuery, error) {
+	var opts []option.ClientOption
+	if ts != nil {
+		opts = append(opts, option.WithTokenSource(ts))
+	}
+	client, err := bigquery.NewClient(ctx, projectID, opts...)
 	if err != nil {
 		return nil, err
 	}

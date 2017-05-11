@@ -9,6 +9,7 @@ import (
 
 	"golang.org/x/net/context"
 
+	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 	"google.golang.org/appengine"
 )
@@ -20,34 +21,16 @@ var (
 
 var cloudStorageFactory CloudStorageFactory
 
-// GetCloudStorageFactory return cloud storage factory.
-func GetCloudStorageFactory() CloudStorageFactory {
-	if cloudStorageFactory == nil {
-		cloudStorageFactory = &cloudStorageFactoryImpl{}
-	}
-	return cloudStorageFactory
-}
-
 // Bucket is cloud storage Bucket.
 type Bucket string
 
-// Name return bucket name.
-func (b Bucket) Name(ctx context.Context) string {
-	return fmt.Sprintf("%s_%s", appengine.AppID(ctx), b)
-}
-
 // CloudStorageFactory is cloud storage factory interface.
 type CloudStorageFactory interface {
-	New(context.Context) (CloudStorage, error)
+	New(context.Context, oauth2.TokenSource) (CloudStorage, error)
 }
 
 // cloudStorageFactoryImpl is implementation of cloud storage factory.
 type cloudStorageFactoryImpl struct{}
-
-// New return cloud storage client.
-func (c *cloudStorageFactoryImpl) New(ctx context.Context) (CloudStorage, error) {
-	return newCloudStorageClient(ctx)
-}
 
 // CloudStorage is cloud storage interface along with reader and writer.
 type CloudStorage interface {
@@ -74,14 +57,28 @@ type cloudStorageClient struct {
 	client *storage.Client
 }
 
-// newCloudStorageClient return new cloud storage client.
-func newCloudStorageClient(ctx context.Context) (*cloudStorageClient, error) {
-	t, _, err := getDefaultTokenSource(ctx, storage.ScopeFullControl)
-	if err != nil {
-		return nil, err
+// GetCloudStorageFactory return cloud storage factory.
+func GetCloudStorageFactory() CloudStorageFactory {
+	if cloudStorageFactory == nil {
+		cloudStorageFactory = &cloudStorageFactoryImpl{}
 	}
+	return cloudStorageFactory
+}
 
-	client, err := storage.NewClient(ctx, option.WithTokenSource(t))
+// Name return bucket name.
+func (b Bucket) Name(ctx context.Context) string {
+	return fmt.Sprintf("%s_%s", appengine.AppID(ctx), b)
+}
+
+// New return cloud storage client.
+//
+// If ts is specified, replace default google token to specified token source.
+func (c *cloudStorageFactoryImpl) New(ctx context.Context, ts oauth2.TokenSource) (CloudStorage, error) {
+	var opts []option.ClientOption
+	if ts != nil {
+		opts = append(opts, option.WithTokenSource(ts))
+	}
+	client, err := storage.NewClient(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
