@@ -9,7 +9,6 @@ import (
 
 	"fmt"
 
-	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
@@ -28,7 +27,7 @@ var bigqueryFactory BigQueryFactory
 
 // BigQueryFactory is bigquery factory interface.
 type BigQueryFactory interface {
-	New(context.Context, string, oauth2.TokenSource) (BigQuery, error)
+	New(context.Context, string, ...option.ClientOption) (BigQuery, error)
 }
 
 // gaeBigQueryFactoryImpl is implementation of bigquery factory.
@@ -70,11 +69,7 @@ func GetBigQueryFactory() BigQueryFactory {
 // New return bigquery client.
 //
 // If ts is specified, replace default google token to specified token source.
-func (b *bigQueryFactoryImpl) New(ctx context.Context, projectID string, ts oauth2.TokenSource) (BigQuery, error) {
-	var opts []option.ClientOption
-	if ts != nil {
-		opts = append(opts, option.WithTokenSource(ts))
-	}
+func (b *bigQueryFactoryImpl) New(ctx context.Context, projectID string, opts ...option.ClientOption) (BigQuery, error) {
 	client, err := bigquery.NewClient(ctx, projectID, opts...)
 	if err != nil {
 		return nil, err

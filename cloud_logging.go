@@ -8,7 +8,6 @@ import (
 	"cloud.google.com/go/logging"
 	"cloud.google.com/go/logging/logadmin"
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -23,7 +22,7 @@ var cloudLoggingFactory CloudLoggingFactory
 
 // CloudLoggingFactory is cloud logging factory interface.
 type CloudLoggingFactory interface {
-	New(context.Context, string, oauth2.TokenSource) (CloudLogging, error)
+	New(context.Context, string, ...option.ClientOption) (CloudLogging, error)
 }
 
 // cloudLoggingFactoryImpl implements cloud logging factory.
@@ -54,11 +53,7 @@ func GetCloudLogginFactory() CloudLoggingFactory {
 // New return new cloud logging client.
 //
 // If ts is specified, replace default google token to specified token source.
-func (c *cloudLoggingFactoryImpl) New(ctx context.Context, projectID string, ts oauth2.TokenSource) (CloudLogging, error) {
-	var opts []option.ClientOption
-	if ts != nil {
-		opts = append(opts, option.WithTokenSource(ts))
-	}
+func (c *cloudLoggingFactoryImpl) New(ctx context.Context, projectID string, opts ...option.ClientOption) (CloudLogging, error) {
 	client, err := logging.NewClient(ctx, projectID, opts...)
 	if err != nil {
 		return nil, err

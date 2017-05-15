@@ -8,7 +8,6 @@ import (
 
 	"golang.org/x/net/context"
 
-	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 )
 
@@ -21,7 +20,7 @@ var cloudStorageFactory CloudStorageFactory
 
 // CloudStorageFactory is cloud storage factory interface.
 type CloudStorageFactory interface {
-	New(context.Context, oauth2.TokenSource) (CloudStorage, error)
+	New(context.Context, ...option.ClientOption) (CloudStorage, error)
 }
 
 // cloudStorageFactoryImpl is implementation of cloud storage factory.
@@ -63,11 +62,7 @@ func GetCloudStorageFactory() CloudStorageFactory {
 // New return cloud storage client.
 //
 // If ts is specified, replace default google token to specified token source.
-func (c *cloudStorageFactoryImpl) New(ctx context.Context, ts oauth2.TokenSource) (CloudStorage, error) {
-	var opts []option.ClientOption
-	if ts != nil {
-		opts = append(opts, option.WithTokenSource(ts))
-	}
+func (c *cloudStorageFactoryImpl) New(ctx context.Context, opts ...option.ClientOption) (CloudStorage, error) {
 	client, err := storage.NewClient(ctx, opts...)
 	if err != nil {
 		return nil, err

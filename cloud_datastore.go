@@ -4,7 +4,6 @@ import (
 	"golang.org/x/net/context"
 
 	"cloud.google.com/go/datastore"
-	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 )
 
@@ -17,7 +16,7 @@ var cloudDatastoreFactory CloudDatastoreFactory
 
 // CloudDatastoreFactory is cloudDatastore factory interface.
 type CloudDatastoreFactory interface {
-	New(context.Context, string, oauth2.TokenSource) (CloudDatastore, error)
+	New(context.Context, string, ...option.ClientOption) (CloudDatastore, error)
 }
 
 // gaeCloudDatastoreFactoryImpl is implementation of cloudDatastore factory.
@@ -48,11 +47,7 @@ func GetCloudDatastoreFactory() CloudDatastoreFactory {
 // New return cloudDatastore client.
 //
 // If ts is specified, replace default google token to specified token source.
-func (b *cloudDatastoreFactoryImpl) New(ctx context.Context, projectID string, ts oauth2.TokenSource) (CloudDatastore, error) {
-	var opts []option.ClientOption
-	if ts != nil {
-		opts = append(opts, option.WithTokenSource(ts))
-	}
+func (b *cloudDatastoreFactoryImpl) New(ctx context.Context, projectID string, opts ...option.ClientOption) (CloudDatastore, error) {
 	client, err := datastore.NewClient(ctx, projectID, opts...)
 	if err != nil {
 		return nil, err

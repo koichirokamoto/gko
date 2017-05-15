@@ -8,7 +8,6 @@ import (
 	"cloud.google.com/go/pubsub"
 
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 )
 
@@ -32,7 +31,7 @@ type SubscriptionConfig struct {
 
 // CloudPubSubFactory is cloud pub/sub factory interface.
 type CloudPubSubFactory interface {
-	New(context.Context, string, oauth2.TokenSource) (CloudPubSub, error)
+	New(context.Context, string, ...option.ClientOption) (CloudPubSub, error)
 }
 
 // cloudPubSubFactoryImpl implements cloud pub/sub factory interface.
@@ -64,11 +63,7 @@ func GetCloudPubSubFactory() CloudPubSubFactory {
 // New return new cloud pub/sub client.
 //
 // If ts is specified, replace default google token to specified token source.
-func (c *cloudPubSubFactoryImpl) New(ctx context.Context, projectID string, ts oauth2.TokenSource) (CloudPubSub, error) {
-	var opts []option.ClientOption
-	if ts != nil {
-		opts = append(opts, option.WithTokenSource(ts))
-	}
+func (c *cloudPubSubFactoryImpl) New(ctx context.Context, projectID string, opts ...option.ClientOption) (CloudPubSub, error) {
 	client, err := pubsub.NewClient(ctx, projectID, opts...)
 	if err != nil {
 		return nil, err
