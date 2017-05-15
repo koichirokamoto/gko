@@ -2,7 +2,6 @@ package gko
 
 import (
 	"errors"
-	"time"
 
 	"fmt"
 
@@ -32,7 +31,6 @@ type cloudLoggingFactoryImpl struct{}
 
 // CloudLogging is cloud logging interface.
 type CloudLogging interface {
-	Send(logID, severity string, opts []logging.LoggerOption, payload interface{})
 	Entries(filters []string, newestFirst bool, maxSize int, pageToken string) ([]*logging.Entry, string, bool, error)
 	CreateSink(sinkID, dst, filter string) (*logadmin.Sink, error)
 	DeleteSink(sinkID string) error
@@ -72,18 +70,6 @@ func (c *cloudLoggingFactoryImpl) New(ctx context.Context, projectID string, ts 
 	}
 
 	return &cloudLoggingClient{ctx, client, admin}, nil
-}
-
-// Send send payload to cloud logging.
-func (c *cloudLoggingClient) Send(logID, severity string, opts []logging.LoggerOption, payload interface{}) {
-	l := c.client.Logger(logID, opts...)
-	e := logging.Entry{
-		InsertID:  RandSeq(32),
-		Severity:  logging.ParseSeverity(severity),
-		Timestamp: time.Now(),
-		Payload:   payload,
-	}
-	l.Log(e)
 }
 
 // Entries return entry iterator.
