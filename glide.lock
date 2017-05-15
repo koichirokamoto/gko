@@ -1,8 +1,8 @@
 hash: 81dc9e935d83a2ba8c45ffa045677a38dd3aafe95c757c138d45693b1e6a7ce2
-updated: 2017-05-01T15:39:43.556731324+09:00
+updated: 2017-05-15T17:07:02.967865045+09:00
 imports:
 - name: cloud.google.com/go
-  version: 3536fc15a6517d90ba50b7ca76ddcb404e8ff1f3
+  version: ed63fb27efcf32e25fe7837e4662457d3da4c4f2
   subpackages:
   - bigquery
   - civil
@@ -30,7 +30,7 @@ imports:
   subpackages:
   - request
 - name: github.com/golang/protobuf
-  version: 2bba0603135d7d7f5cb73b2125beeda19c09f4ef
+  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
   subpackages:
   - proto
   - protoc-gen-go/descriptor
@@ -69,7 +69,7 @@ imports:
   - assert
   - mock
 - name: golang.org/x/net
-  version: da118f7b8e5954f39d0d2130ab35d4bf0e3cb344
+  version: b4690f45fa1cafc47b1c280c2e75116efe40cc13
   subpackages:
   - context
   - context/ctxhttp
@@ -87,22 +87,19 @@ imports:
   - jws
   - jwt
 - name: golang.org/x/sync
-  version: de49d9dcd27d4f764488181bea099dfe6179bcf0
+  version: 5a06fca2c336a4b2b2fcb45702e8c47621b2aa2c
   subpackages:
   - semaphore
 - name: golang.org/x/text
-  version: a9a820217f98f7c8a207ec1e45a874e1fe12c478
+  version: f4b4367115ec2de254587813edaa901bc1c723a8
   subpackages:
   - encoding
   - encoding/internal
   - encoding/internal/identifier
   - encoding/japanese
-  - secure/bidirule
   - transform
-  - unicode/bidi
-  - unicode/norm
 - name: google.golang.org/api
-  version: fbbaff1827317122a8a0e1b24de25df8417ce87b
+  version: 48e49d1645e228d1c50c3d54fb476b2224477303
   subpackages:
   - admin/directory/v1
   - bigquery/v2
@@ -154,6 +151,7 @@ imports:
   - googleapis/api/label
   - googleapis/api/metric
   - googleapis/api/monitoredres
+  - googleapis/cloud/audit
   - googleapis/datastore/v1
   - googleapis/iam/v1
   - googleapis/logging/type
@@ -163,7 +161,7 @@ imports:
   - googleapis/type/latlng
   - protobuf/field_mask
 - name: google.golang.org/grpc
-  version: c73e0165df8e5495c523feb93a8a6c19b9452817
+  version: d2e1b51f33ff8c5e4a15560ff049d200e83726c5
   subpackages:
   - codes
   - credentials
