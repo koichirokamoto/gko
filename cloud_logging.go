@@ -2,7 +2,6 @@ package gko
 
 import (
 	"errors"
-
 	"fmt"
 
 	"cloud.google.com/go/logging"
@@ -10,67 +9,12 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
 )
-
-var (
-	_ CloudLoggingFactory = (*cloudLoggingFactoryImpl)(nil)
-	_ CloudLogging        = (*cloudLoggingClient)(nil)
-)
-
-var cloudLoggingFactory CloudLoggingFactory
-
-// CloudLoggingFactory is cloud logging factory interface.
-type CloudLoggingFactory interface {
-	New(context.Context, string, ...option.ClientOption) (CloudLogging, error)
-}
-
-// cloudLoggingFactoryImpl implements cloud logging factory.
-type cloudLoggingFactoryImpl struct{}
-
-// CloudLogging is cloud logging interface.
-type CloudLogging interface {
-	Entries(filters []string, newestFirst bool, maxSize int, pageToken string) ([]*logging.Entry, string, bool, error)
-	CreateSink(sinkID, dst, filter string) (*logadmin.Sink, error)
-	DeleteSink(sinkID string) error
-}
-
-// cloudLoggingClient is cloud logging client.
-type cloudLoggingClient struct {
-	ctx    context.Context
-	client *logging.Client
-	admin  *logadmin.Client
-}
-
-// GetCloudLogginFactory return cloud logging factory.
-func GetCloudLogginFactory() CloudLoggingFactory {
-	if cloudLoggingFactory == nil {
-		cloudLoggingFactory = &cloudLoggingFactoryImpl{}
-	}
-	return cloudLoggingFactory
-}
-
-// New return new cloud logging client.
-//
-// If ts is specified, replace default google token to specified token source.
-func (c *cloudLoggingFactoryImpl) New(ctx context.Context, projectID string, opts ...option.ClientOption) (CloudLogging, error) {
-	client, err := logging.NewClient(ctx, projectID, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	admin, err := logadmin.NewClient(ctx, projectID, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &cloudLoggingClient{ctx, client, admin}, nil
-}
 
 // Entries return entry iterator.
 //
 // Options is loggin payload filters, updated date order and max size.
-func (c *cloudLoggingClient) Entries(filters []string, newestFirst bool, maxSize int, pageToken string) ([]*logging.Entry, string, bool, error) {
+func Entries(ctx context.Context, admin *logadmin.Client, filters []string, newestFirst bool, maxSize int, pageToken string) ([]*logging.Entry, string, bool, error) {
 	var opts []logadmin.EntriesOption
 	for _, f := range filters {
 		opts = append(opts, logadmin.Filter(f))
@@ -79,7 +23,7 @@ func (c *cloudLoggingClient) Entries(filters []string, newestFirst bool, maxSize
 		opts = append(opts, logadmin.NewestFirst())
 	}
 
-	itr := c.admin.Entries(c.ctx, opts...)
+	itr := admin.Entries(ctx, opts...)
 	if maxSize > 0 {
 		itr.PageInfo().MaxSize = maxSize
 	}
@@ -94,8 +38,8 @@ func (c *cloudLoggingClient) Entries(filters []string, newestFirst bool, maxSize
 }
 
 // CreateSink creates new cloud logging sink.
-func (c *cloudLoggingClient) CreateSink(sinkID, dst, filter string) (*logadmin.Sink, error) {
-	s, err := c.admin.Sink(c.ctx, sinkID)
+func CreateSink(ctx context.Context, admin *logadmin.Client, sinkID, dst, filter string) (*logadmin.Sink, error) {
+	s, err := admin.Sink(ctx, sinkID)
 	if err == nil {
 		return nil, fmt.Errorf("%s is already exist", sinkID)
 	}
@@ -116,15 +60,15 @@ func (c *cloudLoggingClient) CreateSink(sinkID, dst, filter string) (*logadmin.S
 	s.Destination = dst
 	s.Filter = filter
 
-	return c.admin.CreateSink(c.ctx, s)
+	return admin.CreateSink(ctx, s)
 }
 
 // DeleteSink deletes cloud logging sink.
-func (c *cloudLoggingClient) DeleteSink(sinkID string) error {
-	_, err := c.admin.Sink(c.ctx, sinkID)
+func DeleteSink(ctx context.Context, admin *logadmin.Client, sinkID string) error {
+	_, err := admin.Sink(ctx, sinkID)
 	if err != nil {
 		return err
 	}
 
-	return c.admin.DeleteSink(c.ctx, sinkID)
+	return admin.DeleteSink(ctx, sinkID)
 }
