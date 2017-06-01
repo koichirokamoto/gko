@@ -1,4 +1,4 @@
-package gko
+package push
 
 import (
 	"bytes"
@@ -38,7 +38,7 @@ func runWorker(wrk <-chan worker) {
 		wg.Add(1)
 		go func(w worker) {
 			defer wg.Done()
-			Retry(w.work, gensupport.DefaultBackoffStrategy())
+			retry(w.work, gensupport.DefaultBackoffStrategy())
 		}(w)
 	}
 	wg.Wait()

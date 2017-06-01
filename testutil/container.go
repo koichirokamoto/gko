@@ -1,6 +1,4 @@
-// +build test
-
-package gko
+package testutil
 
 import (
 	"reflect"

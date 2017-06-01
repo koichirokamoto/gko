@@ -1,4 +1,4 @@
-package gko
+package taskqueue
 
 import (
 	"net/url"

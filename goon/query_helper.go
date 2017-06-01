@@ -1,12 +1,12 @@
-package gko
+package goon
 
 import (
 	"github.com/mjibson/goon"
 	"google.golang.org/appengine/datastore"
 )
 
-// GoonHelper is goon helper.
-type GoonHelper struct {
+// GoonQueryHelper is goon query helper.
+type GoonQueryHelper struct {
 	*goon.Goon
 	i     *goon.Iterator
 	q     *datastore.Query
@@ -14,49 +14,49 @@ type GoonHelper struct {
 	ret   int
 }
 
-// NewGoonHelper return new goon helper.
-func NewGoonHelper(g *goon.Goon, kind string) *GoonHelper {
-	return &GoonHelper{g, nil, datastore.NewQuery(kind), 0, 0}
+// NewGoonQueryHelper return new goon helper.
+func NewGoonQueryHelper(g *goon.Goon, kind string) *GoonQueryHelper {
+	return &GoonQueryHelper{g, nil, datastore.NewQuery(kind), 0, 0}
 }
 
 // Filter set filter to datastore query.
-func (g *GoonHelper) Filter(field string, value interface{}) *GoonHelper {
+func (g *GoonQueryHelper) Filter(field string, value interface{}) *GoonQueryHelper {
 	g.q = g.q.Filter(field, value)
 	return g
 }
 
 // OrderAsc set ascending order to datastore query.
-func (g *GoonHelper) OrderAsc(field string) *GoonHelper {
+func (g *GoonQueryHelper) OrderAsc(field string) *GoonQueryHelper {
 	g.q = g.q.Order(field)
 	return g
 }
 
 // OrderDesc set descending order to datastore query.
-func (g *GoonHelper) OrderDesc(field string) *GoonHelper {
+func (g *GoonQueryHelper) OrderDesc(field string) *GoonQueryHelper {
 	g.q = g.q.Order("-" + field)
 	return g
 }
 
 // Limit set limit to datastore query.
-func (g *GoonHelper) Limit(limit int) *GoonHelper {
+func (g *GoonQueryHelper) Limit(limit int) *GoonQueryHelper {
 	g.limit = limit
 	g.q = g.q.Limit(limit)
 	return g
 }
 
 // Start set cursor to datastore query.
-func (g *GoonHelper) Start(c datastore.Cursor) *GoonHelper {
+func (g *GoonQueryHelper) Start(c datastore.Cursor) *GoonQueryHelper {
 	g.q = g.q.Start(c)
 	return g
 }
 
 // Count return total entity count corresponded to query.
-func (g *GoonHelper) Count() (int, error) {
+func (g *GoonQueryHelper) Count() (int, error) {
 	return g.q.Count(g.Context)
 }
 
 // RunQuery run datastore query.
-func (g *GoonHelper) RunQuery() *GoonHelper {
+func (g *GoonQueryHelper) RunQuery() *GoonQueryHelper {
 	g.i = g.Run(g.q)
 	return g
 }
@@ -64,7 +64,7 @@ func (g *GoonHelper) RunQuery() *GoonHelper {
 // GetResult return iterated result.
 //
 // if key is non-nil, add one to ret.
-func (g *GoonHelper) GetResult(dst interface{}) (*datastore.Key, error) {
+func (g *GoonQueryHelper) GetResult(dst interface{}) (*datastore.Key, error) {
 	key, err := g.i.Next(dst)
 	if key != nil {
 		g.ret++
@@ -73,7 +73,7 @@ func (g *GoonHelper) GetResult(dst interface{}) (*datastore.Key, error) {
 }
 
 // HasNext return true if there is more entity in datastore than limit.
-func (g *GoonHelper) HasNext() (bool, string, error) {
+func (g *GoonQueryHelper) HasNext() (bool, string, error) {
 	if g.ret < g.limit {
 		return false, "", nil
 	}

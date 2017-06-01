@@ -1,4 +1,4 @@
-package gko
+package ggl
 
 import (
 	"golang.org/x/oauth2"

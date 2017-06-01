@@ -1,7 +1,9 @@
-package gko
+package social
 
 import (
 	"net/url"
+
+	"github.com/koichirokamoto/gko/util"
 )
 
 const facebookAuthAPI = "https://www.facebook.com/dialog/oauth?"
@@ -13,6 +15,6 @@ func FacebookLoginURL(appID, callback string) string {
 	params.Set("redirect_uri", callback)
 	params.Set("auth_type", "rerequest")
 	params.Set("scope", "public_profile")
-	params.Set("state", RandSeq(32))
+	params.Set("state", util.RandSeq(32))
 	return facebookAuthAPI + params.Encode()
 }

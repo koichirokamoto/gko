@@ -1,24 +1,24 @@
-package gko
+package util
 
 import (
 	"strings"
 )
 
-type device int
+type Device int
 
 const (
-	iPhone device = iota
-	iPod
-	iPad
-	androidPhone
-	androidTablet
-	browser
+	IPhone Device = iota
+	IPod
+	IPad
+	AndroidPhone
+	AndroidTablet
+	Browser
 )
 
 // IsMobile return true if http user agent is mobile.
 func IsMobile(ua string) bool {
 	d := getDevice(ua)
-	if d == browser {
+	if d == Browser {
 		return false
 	}
 	return true
@@ -27,23 +27,23 @@ func IsMobile(ua string) bool {
 // IsBrowser return true if http user agent is browser.
 func IsBrowser(ua string) bool {
 	d := getDevice(ua)
-	if d == browser {
+	if d == Browser {
 		return true
 	}
 	return false
 }
 
-func getDevice(ua string) device {
+func GetDevice(ua string) Device {
 	if strings.Contains(ua, "Apple-iPhone") {
-		return iPhone
+		return IPhone
 	} else if strings.Contains(ua, "Apple-iPod") {
-		return iPod
+		return IPod
 	} else if strings.Contains(ua, "Apple-iPad") {
-		return iPad
+		return IPad
 	} else if strings.Contains(ua, "Android") && strings.Contains(ua, "Mobile") {
-		return androidPhone
+		return AndroidPhone
 	} else if strings.Contains(ua, "Android") {
-		return androidTablet
+		return AndroidTablet
 	}
-	return browser
+	return Browser
 }

@@ -1,4 +1,4 @@
-package gko
+package social
 
 import (
 	"crypto/hmac"
@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/koichirokamoto/gko/util"
 )
 
 const (
@@ -185,7 +187,7 @@ func (t *TwitterClient) getHeader(method, path string, params url.Values) string
 
 // CreateTwitterOauthHeader creates oauth header for twitter
 func CreateTwitterOauthHeader(method, path, consumerKey, consumerSecret, accessToken, tokenSecret string, params url.Values) (string, string) {
-	nonce := RandSeq(32)
+	nonce := util.RandSeq(32)
 	timestamp := strconv.FormatInt(time.Now().UTC().Unix(), 10)
 
 	elems := make([]string, 0, 6+len(params))

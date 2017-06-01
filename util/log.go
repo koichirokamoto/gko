@@ -1,4 +1,4 @@
-package gko
+package util
 
 import (
 	"runtime"

@@ -1,4 +1,4 @@
-package gko
+package gsuite
 
 import (
 	"net/http"

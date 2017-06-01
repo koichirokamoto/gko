@@ -1,4 +1,4 @@
-package gko
+package gcp
 
 import (
 	"cloud.google.com/go/bigquery"

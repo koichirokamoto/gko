@@ -1,4 +1,4 @@
-package gko
+package firebase
 
 import (
 	"crypto/x509"
@@ -12,8 +12,8 @@ import (
 	"github.com/dgrijalva/jwt-go/request"
 )
 
-// FirebaseAuthUserID return firebase auth user id.
-func FirebaseAuthUserID(c *http.Client, r *http.Request, id string) (uid string, err error) {
+// AuthUserID return firebase auth user id.
+func AuthUserID(c *http.Client, r *http.Request, id string) (uid string, err error) {
 	keyLists := "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
 	url := "https://securetoken.google.com/"
 	token, err := request.ParseFromRequestWithClaims(r, request.ArgumentExtractor{"token"}, jwt.StandardClaims{}, func(t *jwt.Token) (interface{}, error) {

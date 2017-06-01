@@ -1,2 +1,2 @@
 # gko
-GAE/Go Helper Library
+My helper library
