@@ -1,5 +1,5 @@
-hash: c6de4765a6fd7ecd859d8571bd66c0b0f57da8c99e4897a3355ea86f15d4ec12
-updated: 2017-06-01T15:46:54.626799801+09:00
+hash: b9186cfa4d62c1c851c7d5d8b921c917161689f78f9a239ecf81de5adf87fd95
+updated: 2017-06-01T16:24:46.517927837+09:00
 imports:
 - name: cloud.google.com/go
   version: 0a3a2cd834701e483dbc50df3b4819f84932a791
@@ -21,10 +21,6 @@ imports:
   - pubsub
   - pubsub/apiv1
   - storage
-- name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
-  subpackages:
-  - spew
 - name: github.com/dgrijalva/jwt-go
   version: 6c8dedd55f8a2e41f605de6d5d66e51ed1f299fc
   subpackages:
@@ -43,29 +39,18 @@ imports:
   - ptypes/wrappers
 - name: github.com/googleapis/gax-go
   version: 9af46dd5a1713e8b5cd71106287eba3cefdde50b
-- name: github.com/koichirokamoto/apns
-  version: 4ee324a4babe553629ad60b1d3fe811ddf921a38
 - name: github.com/koichirokamoto/webpush
   version: 1f39463356a425c3ac1951fdf5df80d6a256eaf9
 - name: github.com/mjibson/goon
   version: 4704d2914e39207b9ea1f29065975a803e96b8ae
-- name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
-  subpackages:
-  - difflib
 - name: github.com/sendgrid/rest
   version: 14de1ac72d9ae5c3c0d7c02164c52ebd3b951a4e
 - name: github.com/sendgrid/sendgrid-go
   version: 56c34d7ade7310f7cc79ac49466500dd48094e30
   subpackages:
   - helpers/mail
-- name: github.com/stretchr/objx
-  version: cbeaeb16a013161a98496fad62933b1d21786672
-- name: github.com/stretchr/testify
-  version: e964b172ca7f4c322ee4c39ea605ff53fab44f79
-  subpackages:
-  - assert
-  - mock
+- name: github.com/sideshow/apns2
+  version: 7588e8fdc55b1b7f6208845ef1c5ef7221a3c9c8
 - name: golang.org/x/net
   version: 3da985ce5951d99de868be4385f21ea6c2b22f24
   subpackages:

@@ -35,7 +35,6 @@ import:
   - log
   - mail
   - taskqueue
-  - urlfetch
   - aetest
 - package: google.golang.org/grpc
-- package: github.com/koichirokamoto/apns
+- package: github.com/sideshow/apns2
