@@ -16,16 +16,11 @@ import:
   subpackages:
   - helpers/mail
 - package: golang.org/x/net
-  version: 84f0e6f92b10139f986b1756e149a7d9de270cdc
   subpackages:
   - context
 - package: golang.org/x/oauth2
   subpackages:
   - google
-- package: golang.org/x/text
-  subpackages:
-  - encoding/japanese
-  - transform
 - package: google.golang.org/api
   subpackages:
   - admin/directory/v1
@@ -43,6 +38,4 @@ import:
   - urlfetch
   - aetest
 - package: google.golang.org/grpc
-  version: 1c69e4cae0f5180ce7d8b472bf0a55d2654fe31b
 - package: github.com/koichirokamoto/apns
-- package: github.com/satori/go.uuid
