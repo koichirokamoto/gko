@@ -17,7 +17,7 @@ const (
 
 // IsMobile return true if http user agent is mobile.
 func IsMobile(ua string) bool {
-	d := getDevice(ua)
+	d := GetDevice(ua)
 	if d == Browser {
 		return false
 	}
@@ -26,13 +26,14 @@ func IsMobile(ua string) bool {
 
 // IsBrowser return true if http user agent is browser.
 func IsBrowser(ua string) bool {
-	d := getDevice(ua)
+	d := GetDevice(ua)
 	if d == Browser {
 		return true
 	}
 	return false
 }
 
+// GetDevice gets device from http user-agent.
 func GetDevice(ua string) Device {
 	if strings.Contains(ua, "Apple-iPhone") {
 		return IPhone
