@@ -84,6 +84,7 @@ func main() {
 	setupEndpoints()
 	setupServer()
 	setupSwagger()
+	setupGlide()
 }
 
 func setupEndpoints() {
@@ -129,6 +130,12 @@ func setupServer() {
 func setupSwagger() {
 	runCmd("go", "get", "-u", "github.com/go-swagger/go-swagger/cmd/swagger")
 	runCmd("swagger", "init", "spec", *root)
+}
+
+func setupGlide() {
+	runCmd("glide", "init", "--non-interactive")
+	runCmd("glide", "get", "cloud.google.com/go", "--all-dependencies", "--skip-test", "--non-interactive")
+	runCmd("glide", "get", "google.golang.org/appengine", "--all-dependencies", "--skip-test", "--non-interactive")
 }
 
 func makeDir(path string) {
