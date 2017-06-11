@@ -46,6 +46,10 @@ func (s *StdLogger) Log(svr severity, format string, args ...interface{}) {
 // AppEngineLogger is logger output log to appengine logging.
 type AppEngineLogger struct{ ctx context.Context }
 
+func NewAppEngineLogger(ctx context.Context) *AppEngineLogger {
+	return &AppEngineLogger{ctx}
+}
+
 // Log outputs log to appengine logging.
 func (a *AppEngineLogger) Log(svr severity, format string, args ...interface{}) {
 	select {
@@ -71,6 +75,10 @@ func (a *AppEngineLogger) Log(svr severity, format string, args ...interface{}) 
 // StackdriverLogging is logger output log to stackdriver.
 type StackdriverLogging struct {
 	c *logging.Client
+}
+
+func NewStackdriverLogging(c *logging.Client) *StackdriverLogging {
+	return &StackdriverLogging{c}
 }
 
 func getLogMessageContainRuntimeInfo(format string) string {

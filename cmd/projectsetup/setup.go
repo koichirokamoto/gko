@@ -31,7 +31,7 @@ automatic_scaling:
   min_pending_latency: 250ms  # default value
   max_pending_latency: automatic
   max_concurrent_requests: 50
-	
+
 inbound_services:
 - warmup
 - mail
@@ -48,7 +48,7 @@ instance_class: B1
 basic_scaling:
   max_instances: 1
   idle_timeout: 10m
-	
+
 inbound_services:
 - warmup
 
