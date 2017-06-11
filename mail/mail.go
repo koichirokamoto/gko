@@ -3,7 +3,7 @@ package mail
 import (
 	"net/http"
 
-	"github.com/koichirokamoto/gko/ggl/gsuite"
+	"github.com/koichirokamoto/gko/cloud/gsuite"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -77,7 +77,7 @@ func (g *gaeMailFactoryImpl) New(ctx context.Context) Mail {
 
 // GmailClientFactory is gmail client factory interface.
 type GmailClientFactory interface {
-	New(context.Context, *oauth2.Config, string) Mail
+	New(context.Context, *oauth2.Config, string) (Mail, error)
 }
 
 // GetGmailFactory return gmail factory.
@@ -90,10 +90,10 @@ func GetGmailFactory() GmailClientFactory {
 
 type gmailFactoryImpl struct{}
 
-func (g *gmailFactoryImpl) New(ctx context.Context, conf *oauth2.Config, refreshToken string) Mail {
+func (g *gmailFactoryImpl) New(ctx context.Context, conf *oauth2.Config, refreshToken string) (Mail, error) {
 	srv, err := gsuite.NewGmailService(ctx, conf, refreshToken)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return &gmailClient{srv}
+	return &gmailClient{srv}, nil
 }

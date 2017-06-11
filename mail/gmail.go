@@ -22,6 +22,6 @@ func (g *gmailClient) Send(from, subject, content, contentType string, to []stri
 		Payload: body,
 		Raw:     "",
 	}
-	g.srv.Users.Messages.Send(from, msg).Do()
-	return nil
+	_, err := g.srv.Users.Messages.Send(from, msg).Do()
+	return err
 }
