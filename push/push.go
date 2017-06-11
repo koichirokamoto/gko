@@ -12,6 +12,7 @@ import (
 	"github.com/koichirokamoto/gko/log"
 	"github.com/koichirokamoto/webpush"
 	"github.com/sideshow/apns2"
+	"golang.org/x/net/context"
 	"google.golang.org/api/gensupport"
 )
 
@@ -24,7 +25,7 @@ type worker interface {
 	work() error
 }
 
-func runWorker(wrk <-chan worker) {
+func runWorker(ctx context.Context, wrk <-chan worker) {
 	var wg sync.WaitGroup
 	for w := range wrk {
 		wg.Add(1)
@@ -32,7 +33,7 @@ func runWorker(wrk <-chan worker) {
 			defer wg.Done()
 			err := retry(w.work, gensupport.DefaultBackoffStrategy())
 			if err != nil {
-				log.DefaultLogger.Log(log.Error, err.Error())
+				log.DefaultLogger.Log(ctx, log.Error, err.Error())
 			}
 		}(w)
 	}
@@ -47,6 +48,7 @@ type FcmSubscription struct {
 }
 
 type fcmWorker struct {
+	ctx     context.Context
 	c       *http.Client
 	key     string
 	sub     *FcmSubscription
@@ -54,29 +56,29 @@ type fcmWorker struct {
 }
 
 // SendFcmNotification push fcm notification to user.
-func SendFcmNotification(c *http.Client, key string, subs []*FcmSubscription, payload []byte) {
+func SendFcmNotification(ctx context.Context, c *http.Client, key string, subs []*FcmSubscription, payload []byte) {
 	in := make(chan worker)
 	go func() {
 		for _, sub := range subs {
-			in <- &fcmWorker{c, key, sub, payload}
+			in <- &fcmWorker{ctx, c, key, sub, payload}
 		}
 		close(in)
 	}()
 
-	runWorker(in)
+	runWorker(ctx, in)
 }
 
 func (f *fcmWorker) work() error {
 	encryption, err := webpush.Encryption(f.sub.Key, f.sub.Auth, f.payload, 0)
 	if err != nil {
-		log.DefaultLogger.Log(log.Error, err.Error())
+		log.DefaultLogger.Log(f.ctx, log.Error, err.Error())
 		return err
 	}
 
 	endpoint := strings.Replace(f.sub.Endpoint, gcmURL, fcmURL, 1)
 	req, err := http.NewRequest("POST", endpoint, bytes.NewReader(encryption.Payload))
 	if err != nil {
-		log.DefaultLogger.Log(log.Error, err.Error())
+		log.DefaultLogger.Log(f.ctx, log.Error, err.Error())
 		return err
 	}
 	defer req.Body.Close()
@@ -87,7 +89,7 @@ func (f *fcmWorker) work() error {
 	req.ContentLength = int64(len(encryption.Payload))
 	res, err := f.c.Do(req)
 	if err != nil {
-		log.DefaultLogger.Log(log.Error, err.Error())
+		log.DefaultLogger.Log(f.ctx, log.Error, err.Error())
 		return err
 	}
 	res.Body.Close()
@@ -95,24 +97,25 @@ func (f *fcmWorker) work() error {
 }
 
 type apnsWorker struct {
+	ctx         context.Context
 	c           *apns2.Client
 	deviceToken string
 	payload     []byte
 }
 
 // SendApns2Notification send apns2 notification.
-func SendApns2Notification(cert tls.Certificate, deviceTokens []string, payload []byte) {
+func SendApns2Notification(ctx context.Context, cert tls.Certificate, deviceTokens []string, payload []byte) {
 	in := make(chan worker)
 
 	go func() {
 		c := apns2.NewClient(cert)
 		for _, d := range deviceTokens {
-			in <- &apnsWorker{c, d, payload}
+			in <- &apnsWorker{ctx, c, d, payload}
 		}
 		close(in)
 	}()
 
-	runWorker(in)
+	runWorker(ctx, in)
 }
 
 func (a *apnsWorker) work() error {
@@ -122,13 +125,13 @@ func (a *apnsWorker) work() error {
 
 	res, err := a.c.Push(notification)
 	if err != nil {
-		log.DefaultLogger.Log(log.Error, err.Error())
+		log.DefaultLogger.Log(a.ctx, log.Error, err.Error())
 		return err
 	}
 
 	if !res.Sent() {
 		errMsg := fmt.Sprintf("not sent: %d %s %s", res.StatusCode, res.ApnsID, res.Reason)
-		log.DefaultLogger.Log(log.Error, errMsg)
+		log.DefaultLogger.Log(a.ctx, log.Error, errMsg)
 		return fmt.Errorf(errMsg)
 	}
 

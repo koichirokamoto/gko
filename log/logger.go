@@ -5,8 +5,6 @@ import (
 	"runtime"
 	"strconv"
 
-	"cloud.google.com/go/logging"
-
 	"golang.org/x/net/context"
 	appenginelog "google.golang.org/appengine/log"
 )
@@ -32,54 +30,49 @@ func init() {
 
 // Logger is interface output log.
 type Logger interface {
-	Log(svr severity, format string, args ...interface{})
+	Log(ctx context.Context, svr severity, format string, args ...interface{})
 }
 
 // StdLogger is logger output log to stdout.
 type StdLogger struct{}
 
 // Log outputs log to stdout.
-func (s *StdLogger) Log(svr severity, format string, args ...interface{}) {
-	log.Printf(format, args...)
+func (s *StdLogger) Log(ctx context.Context, svr severity, format string, args ...interface{}) {
+	select {
+	case <-ctx.Done():
+		log.Println(ctx, getLogMessageContainRuntimeInfo("context is canceled"))
+	default:
+		log.Printf(format, args...)
+	}
 }
 
 // AppEngineLogger is logger output log to appengine logging.
-type AppEngineLogger struct{ ctx context.Context }
-
-func NewAppEngineLogger(ctx context.Context) *AppEngineLogger {
-	return &AppEngineLogger{ctx}
-}
+type AppEngineLogger struct{}
 
 // Log outputs log to appengine logging.
-func (a *AppEngineLogger) Log(svr severity, format string, args ...interface{}) {
+func (a *AppEngineLogger) Log(ctx context.Context, svr severity, format string, args ...interface{}) {
 	select {
-	case <-a.ctx.Done():
-		appenginelog.Errorf(a.ctx, getLogMessageContainRuntimeInfo("context is canceled"))
+	case <-ctx.Done():
+		appenginelog.Errorf(ctx, getLogMessageContainRuntimeInfo("context is canceled"))
 	default:
 		msg := getLogMessageContainRuntimeInfo(format)
 		switch svr {
 		case Critical:
-			appenginelog.Criticalf(a.ctx, msg, args...)
+			appenginelog.Criticalf(ctx, msg, args...)
 		case Error:
-			appenginelog.Errorf(a.ctx, msg, args...)
+			appenginelog.Errorf(ctx, msg, args...)
 		case Warning:
-			appenginelog.Warningf(a.ctx, msg, args...)
+			appenginelog.Warningf(ctx, msg, args...)
 		case Info:
-			appenginelog.Infof(a.ctx, msg, args...)
+			appenginelog.Infof(ctx, msg, args...)
 		case Debug:
-			appenginelog.Debugf(a.ctx, msg, args...)
+			appenginelog.Debugf(ctx, msg, args...)
 		}
 	}
 }
 
 // StackdriverLogging is logger output log to stackdriver.
-type StackdriverLogging struct {
-	c *logging.Client
-}
-
-func NewStackdriverLogging(c *logging.Client) *StackdriverLogging {
-	return &StackdriverLogging{c}
-}
+type StackdriverLogging struct{}
 
 func getLogMessageContainRuntimeInfo(format string) string {
 	_, file, line, ok := runtime.Caller(1)

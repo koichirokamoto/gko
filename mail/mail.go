@@ -45,15 +45,15 @@ type Mail interface {
 
 // SendGridClientFactory is sendgrid client factory interface.
 type SendGridClientFactory interface {
-	New(*http.Client, string) Mail
+	New(context.Context, *http.Client, string) Mail
 }
 
 // sendGridMailFactoryImpl implements mail factory interface.
 type sendGridMailFactoryImpl struct{}
 
 // New return new send grid mail.
-func (s *sendGridMailFactoryImpl) New(client *http.Client, key string) Mail {
-	return newSendGridMail(client, key)
+func (s *sendGridMailFactoryImpl) New(ctx context.Context, client *http.Client, key string) Mail {
+	return newSendGridMail(ctx, client, key)
 }
 
 // GAEMailClientFactory is gae mail client factory interface.

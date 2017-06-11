@@ -9,16 +9,18 @@ import (
 	"github.com/sendgrid/rest"
 	sendgrid "github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	"golang.org/x/net/context"
 )
 
 // sendGridMailClient is mail client of sendgrid interface.
 type sendGridMailClient struct {
+	ctx    context.Context
 	client *http.Client
 	key    string
 }
 
-func newSendGridMail(client *http.Client, key string) Mail {
-	return &sendGridMailClient{client, key}
+func newSendGridMail(ctx context.Context, client *http.Client, key string) Mail {
+	return &sendGridMailClient{ctx, client, key}
 }
 
 // Send send email using sendgrid.
@@ -29,17 +31,17 @@ func (s *sendGridMailClient) Send(from, subject, content, contentType string, to
 
 	httpreq, err := rest.BuildRequestObject(req)
 	if err != nil {
-		log.DefaultLogger.Log(log.Error, err.Error())
+		log.DefaultLogger.Log(s.ctx, log.Error, err.Error())
 		return err
 	}
 	res, err := s.client.Do(httpreq)
 	if err != nil {
-		log.DefaultLogger.Log(log.Error, err.Error())
+		log.DefaultLogger.Log(s.ctx, log.Error, err.Error())
 		return err
 	} else if 400 <= res.StatusCode {
 		msg, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			log.DefaultLogger.Log(log.Error, err.Error())
+			log.DefaultLogger.Log(s.ctx, log.Error, err.Error())
 			return err
 		}
 		return fmt.Errorf("status code is in error range, %s", msg)
