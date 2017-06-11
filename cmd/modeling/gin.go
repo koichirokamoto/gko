@@ -246,7 +246,11 @@ func (g *generator) generateProperties(name string, s spec.Schema) error {
 		tags = append(tags, newtags...)
 		u := toUpperCaseFirstChar(pname)
 		g.printComments(p)
-		g.printf("%s %s `json:\"%s,omitempty\" binding:\"%s\"`\n", u, typ, pname, strings.Join(tags, ","))
+		format := "%s %s `json:\"%s,omitempty\" binding:\"%s\"`\n"
+		if pname == "id" {
+			format = "%s %s `json:\"%s,omitempty\" binding:\"%s\" goon:\"id\"`\n"
+		}
+		g.printf(format, u, typ, pname, strings.Join(tags, ","))
 	}
 
 	return nil
