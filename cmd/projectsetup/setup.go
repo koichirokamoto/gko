@@ -166,6 +166,7 @@ func setupGlide() {
 	runCmd("glide", "get", "cloud.google.com/go", "--skip-test", "--non-interactive")
 	runCmd("glide", "get", "google.golang.org/appengine", "--skip-test", "--non-interactive")
 	runCmd("glide", "get", "gopkg.in/gin-gonic/gin.v1", "--skip-test", "--non-interactive")
+	runCmd("glide", "update")
 }
 
 func makeDir(path string) {
