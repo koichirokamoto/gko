@@ -1,12 +1,21 @@
+// Setup project for appengine/go
+//
+// 1) setup basic directory
+// 2) setup swagger.yml
+// 3) setup dependencies using glide
+
 package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"golang.org/x/tools/imports"
 )
 
 var root = flag.String("r", "./", "server root directory")
@@ -69,26 +78,37 @@ const endpointsYaml = `handlers:
   secure: always
 `
 
+const initFile = `package %s
+
+func init() {
+	router := gin.New()
+
+	http.Handle("/", router)
+}
+`
+
 func main() {
 	flag.Parse()
-	root, err := filepath.Abs(*root)
+	rp, err := filepath.Abs(*root)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = os.Chdir(root)
+	makeDir(rp)
+
+	err = os.Chdir(rp)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	setupEndpoints()
-	setupServer()
 	setupSwagger()
 	setupGlide()
+	setupEndpoints()
+	setupServer()
 }
 
 func setupEndpoints() {
-	base := filepath.Join(*root, "endpoints")
+	base := "endpoints"
 	// Create api dir.
 	api := filepath.Join(base, "api")
 	makeDir(api)
@@ -107,35 +127,45 @@ func setupEndpoints() {
 }
 
 func setupServer() {
-	base := filepath.Join(*root, "modules")
+	base := "modules"
 	// Create modules
 	makeDir(base)
 	//Create endpoints.yaml
 	ey := filepath.Join(base, "endpoints.yaml")
 	makeFile(ey, endpointsYaml)
 	// Create default module.
-	df := filepath.Join(base, "default")
+	df := filepath.Join(base, "defaultapp")
 	makeDir(df)
 	// Create default app.yaml.
 	dy := filepath.Join(df, "app.yaml")
 	makeFile(dy, defaultYaml)
+	// Create defaultapp init.go
+	dg := filepath.Join(df, "init.go")
+	makeFile(dg, fmt.Sprintf(initFile, "defaultapp"))
 	// Create backend module.
 	bk := filepath.Join(base, "backend")
 	makeDir(bk)
 	// Create backend app.yaml
 	by := filepath.Join(bk, "app.yaml")
 	makeFile(by, backendYaml)
+	// Create backend init.go
+	bg := filepath.Join(bk, "init.go")
+	makeFile(bg, fmt.Sprintf(initFile, "backend"))
+	// Format go files
+	formatGoFile(dg)
+	formatGoFile(bg)
 }
 
 func setupSwagger() {
 	runCmd("go", "get", "-u", "github.com/go-swagger/go-swagger/cmd/swagger")
-	runCmd("swagger", "init", "spec", *root)
+	runCmd("swagger", "init", "spec")
 }
 
 func setupGlide() {
 	runCmd("glide", "init", "--non-interactive")
 	runCmd("glide", "get", "cloud.google.com/go", "--all-dependencies", "--skip-test", "--non-interactive")
 	runCmd("glide", "get", "google.golang.org/appengine", "--all-dependencies", "--skip-test", "--non-interactive")
+	runCmd("glide", "get", "gopkg.in/gin-gonic/gin.v1", "--all-dependencies", "--skip-test", "--non-interactive")
 }
 
 func makeDir(path string) {
@@ -167,6 +197,21 @@ func runCmd(name string, args ...string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func formatGoFile(filename string) {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	formated, err := imports.Process(filename, data, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = ioutil.WriteFile(filename, formated, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
