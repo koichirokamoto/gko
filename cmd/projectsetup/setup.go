@@ -102,7 +102,6 @@ func main() {
 	}
 
 	setupSwagger()
-	setupGlide()
 	setupEndpoints()
 	setupServer()
 }
@@ -151,9 +150,11 @@ func setupServer() {
 	// Create backend init.go
 	bg := filepath.Join(bk, "init.go")
 	makeFile(bg, fmt.Sprintf(initFile, "backend"))
+	setupGlide()
 	// Format go files
 	formatGoFile(dg)
 	formatGoFile(bg)
+	runCmd("glide", "update")
 }
 
 func setupSwagger() {
@@ -166,7 +167,6 @@ func setupGlide() {
 	runCmd("glide", "get", "cloud.google.com/go", "--skip-test", "--non-interactive")
 	runCmd("glide", "get", "google.golang.org/appengine", "--skip-test", "--non-interactive")
 	runCmd("glide", "get", "gopkg.in/gin-gonic/gin.v1", "--skip-test", "--non-interactive")
-	runCmd("glide", "update")
 }
 
 func makeDir(path string) {
