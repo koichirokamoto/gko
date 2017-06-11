@@ -1,4 +1,4 @@
-package goon
+package gae
 
 import (
 	"github.com/mjibson/goon"
