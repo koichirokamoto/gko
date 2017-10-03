@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"go/format"
@@ -10,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/go-openapi/spec"
@@ -126,7 +128,7 @@ func (g *generator) format() []byte {
 		// The user can compile the output to see the error.
 		log.Printf("warning: internal error: invalid Go generated: %s", err)
 		log.Printf("warning: compile the package to analyze the error")
-		return g.buf.Bytes()
+		return b
 	}
 	return src
 }
@@ -154,26 +156,57 @@ func (g *generator) generateModels(s *spec.Swagger) error {
 		g.printf("}\n")
 	}
 
+	for name, s := range s.Responses {
+		schema := s.Schema
+		if schema == nil {
+			continue
+		}
+		// Print comments.
+		g.printf(formatComment(s.Description) + "\n")
+		// Print struct.
+		name = toUpperCaseFirstChar(name)
+		g.printf("type %s struct {\n", name)
+		if &schema.Ref != nil {
+			g.printf("%s %s `json:\"response,omitempty\"`\n", name, "*"+g.extractReferenceName(schema.Ref))
+		} else if schema != nil {
+			err := g.generateProperties(name, *schema)
+			if err != nil {
+				return err
+			}
+		}
+		g.printf("}\n")
+	}
+
+	// Interate paths and print both request and response.
+	for _, s := range s.Paths.Paths {
+		err := g.generateReqAndRes(s)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (g *generator) printComments(s spec.Schema) {
 	var comments []string
 	if s.Title != "" {
-		titles := strings.Split(strings.TrimRight(s.Title, "\n"), "\n")
-		for i, t := range titles {
-			titles[i] = "// " + t
-		}
-		comments = append(comments, strings.Join(titles, "\n"))
+		comment := formatComment(s.Title)
+		comments = append(comments, comment)
 	}
 	if s.Description != "" {
-		descs := strings.Split(strings.TrimRight(s.Description, "\n"), "\n")
-		for i, d := range descs {
-			descs[i] = "// " + d
-		}
-		comments = append(comments, strings.Join(descs, "\n"))
+		comment := formatComment(s.Description)
+		comments = append(comments, comment)
 	}
 	g.printf("%s\n", strings.Join(comments, "\n//\n"))
+}
+
+func formatComment(comment string) string {
+	descs := strings.Split(strings.TrimRight(comment, "\n"), "\n")
+	for i, d := range descs {
+		descs[i] = "// " + d
+	}
+	return strings.Join(descs, "\n")
 }
 
 func (g *generator) generateCodes(name string, s spec.Schema) error {
@@ -257,14 +290,20 @@ func (g *generator) generateProperties(name string, s spec.Schema) error {
 }
 
 func toUpperCaseFirstChar(name string) string {
+	if name == "" {
+		return name
+	}
 	first := strings.ToUpper(name[0:1])
 	return first + name[1:]
 }
 
 func (g *generator) extractReferenceName(ref spec.Ref) string {
 	rs := ref.String()
+	if rs == "" {
+		return rs
+	}
 	li := strings.LastIndex(rs, "/")
-	return rs[li+1:]
+	return toUpperCaseFirstChar(rs[li+1:])
 }
 
 func (g *generator) extractTypeAndTagsFromPropertie(parent, name string, p spec.Schema) (typ string, tags []string, err error) {
@@ -405,4 +444,127 @@ func getMaxAndMinTags(p spec.Schema) (tags []string) {
 		}
 	}
 	return
+}
+
+func (g *generator) generateReqAndRes(item spec.PathItem) (err error) {
+	get := item.Get
+	if get != nil {
+		err = g.printReqAndRes(get)
+		if err != nil {
+			return err
+		}
+	}
+	post := item.Post
+	if post != nil {
+		err = g.printReqAndRes(post)
+		if err != nil {
+			return err
+		}
+	}
+	put := item.Put
+	if put != nil {
+		err = g.printReqAndRes(put)
+		if err != nil {
+			return err
+		}
+	}
+	delete := item.Delete
+	if delete != nil {
+		err = g.printReqAndRes(delete)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (g *generator) printReqAndRes(op *spec.Operation) (err error) {
+	id := op.ID
+	if id == "" {
+		return errors.New("operation id must be not empty")
+	}
+	err = g.printRequest(id, op.OperationProps)
+	if err != nil {
+		return err
+	}
+	err = g.printResponse(id, op.OperationProps)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *generator) printRequest(id string, op spec.OperationProps) (err error) {
+	for _, p := range op.Parameters {
+		if p.Name != "body" || p.Schema == nil {
+			continue
+		}
+		name := toUpperCaseFirstChar(id + "Request")
+		g.printf(formatComment(p.Description) + "\n")
+		g.printf("type %s struct {\n", name)
+		if p.Schema != nil {
+			ref := p.Schema.Ref
+			if &ref != nil && ref.String() != "" {
+				g.printf("Request %s `json:\"request,omitempty\"`\n", "*"+g.extractReferenceName(p.Schema.Ref))
+			} else {
+				err = g.generateProperties(name, *p.Schema)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		g.printf("}\n")
+	}
+	return nil
+}
+
+func (g *generator) printResponse(id string, op spec.OperationProps) error {
+	res := op.Responses
+	if res == nil {
+		return nil
+	}
+	def := res.Default
+	if def != nil {
+		ref := def.Ref
+		schema := def.Schema
+		if &ref == nil && schema == nil {
+			return nil
+		}
+		name := toUpperCaseFirstChar(id + "DefaultResponse")
+		g.printf(formatComment(def.Description) + "\n")
+		g.printf("type %s struct {\n", name)
+		if &ref != nil && ref.String() != "" {
+			g.printf("Response %s `json:\"response,omitempty\"`\n", "*"+g.extractReferenceName(ref))
+		} else if schema != nil {
+			err := g.generateProperties(name, *schema)
+			if err != nil {
+				return err
+			}
+		}
+		g.printf("}\n")
+	}
+	m := res.StatusCodeResponses
+	for code, res := range m {
+		schema := res.Schema
+		if schema == nil {
+			return nil
+		}
+		name := toUpperCaseFirstChar(id + strconv.Itoa(code) + "Response")
+		g.printf(formatComment(res.Description) + "\n")
+		g.printf("type %s struct {\n", name)
+		ref := schema.Ref
+		if &ref != nil && ref.String() != "" {
+			g.printf("Response %s `json:\"response,omitempty\"`\n", "*"+g.extractReferenceName(schema.Ref))
+		} else if schema != nil {
+			format := "Response %s `json:\"%s,omitempty\" binding:\"%s\"`\n"
+			typ, tags, err := g.extractTypeAndTagsFromPropertie("", name, *schema)
+			if err != nil {
+				return err
+			}
+			g.printf(format, typ, "response", strings.Join(tags, ","))
+		}
+		g.printf("}\n")
+	}
+	return nil
 }
