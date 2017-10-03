@@ -558,7 +558,7 @@ func (g *generator) printResponse(id string, op spec.OperationProps) error {
 			g.printf("Response %s `json:\"response,omitempty\"`\n", "*"+g.extractReferenceName(schema.Ref))
 		} else if schema != nil {
 			format := "Response %s `json:\"%s,omitempty\" binding:\"%s\"`\n"
-			typ, tags, err := g.extractTypeAndTagsFromPropertie("", name, *schema)
+			typ, tags, err := g.extractTypeAndTagsFromPropertie("Inner", name, *schema)
 			if err != nil {
 				return err
 			}
